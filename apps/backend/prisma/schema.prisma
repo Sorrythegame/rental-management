@@ -55,7 +55,7 @@ model Asset {
   id           Int          @id @default(autoincrement()) // 自增 ID
   type         AssetType                                   // 资产类型
   name         String?                                     // 配件名称（仅配件用）
-  sinCode      String?                                     // SIN 码（仅相机用）
+  sinCode      String?   @map("snCode")                        // SIN 码（仅相机用）
   brandId      Int?                                        // 品牌 ID（配件可空）
   brand        Brand?       @relation(fields: [brandId], references: [id])
   modelId      Int?                                        // 型号 ID（配件可空）
@@ -81,7 +81,7 @@ model RentalOrder {
   id               Int         @id @default(autoincrement()) // 自增 ID
   assetId          Int?                                      // 关联资产 ID
   asset            Asset?      @relation(fields: [assetId], references: [id])
-  sinCode          String?                                   // 设备 SIN 码
+  sinCode          String?   @map("snCode")                      // 设备 SIN 码
   brandName        String?                                   // 设备品牌（快照）
   modelName        String?                                   // 设备型号/名称（快照）
   startTime        DateTime                                  // 租赁开始时间
