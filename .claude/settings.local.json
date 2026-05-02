@@ -30,7 +30,29 @@
       "Bash(curl *)",
       "Bash(pnpm --filter backend add cookie-parser)",
       "Bash(pnpm --filter backend add -D @types/cookie-parser)",
-      "Bash(findstr /I \"node.exe\")"
+      "Bash(findstr /I \"node.exe\")",
+      "Bash(ssh -V)",
+      "Bash(chmod +x /tmp/sshpass.exe)",
+      "Bash(/tmp/sshpass.exe -V)",
+      "Bash(git status *)",
+      "Bash(git check-ignore *)",
+      "Bash(git config *)",
+      "Bash(ssh-add -l)",
+      "Bash(pacman -Ss sshpass)",
+      "Bash(ssh -o StrictHostKeyChecking=no -o BatchMode=no -o PasswordAuthentication=yes root@111.228.33.56 \"echo test\")",
+      "Bash(kill %1)",
+      "Bash(npm --version)",
+      "Bash(mkdir -p /tmp/ssh-helper)",
+      "Read(//tmp/**)",
+      "Bash(npm install *)",
+      "Bash(node deploy.js)",
+      "Read(//d/tmp/**)",
+      "Read(//c/Users/Administrator/AppData/Local/Temp/**)",
+      "Bash(node -e *)",
+      "Bash(git add *)",
+      "Bash(git commit *)",
+      "Bash(git push *)",
+      "Bash(node *)"
     ]
   }
 }
