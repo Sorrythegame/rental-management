@@ -1,7 +1,7 @@
 {
-  "name": "rd-platform",
+  "name": "rental-management",
   "version": "1.0.0",
-  "description": "人事运营管理系统 Monorepo",
+  "description": "相机租赁管理系统 Monorepo",
   "private": true,
   "scripts": {}
 }
