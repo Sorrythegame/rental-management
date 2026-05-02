@@ -1,0 +1,36 @@
+{
+  "permissions": {
+    "allow": [
+      "Bash(pnpm dev *)",
+      "Bash(pnpm exec *)",
+      "Bash(pnpm --filter frontend add @ant-design/icons-vue)",
+      "Bash(netstat -ano)",
+      "Bash(tasklist *)",
+      "Bash(wmic process *)",
+      "Bash(taskkill *)",
+      "Bash(awk '{print $5}')",
+      "Bash(pnpm --filter backend add bcrypt)",
+      "Bash(pnpm --filter backend add -D @types/bcrypt)",
+      "Bash(pnpm rebuild *)",
+      "Bash(node -e \"const b=require\\('bcrypt'\\); b.hash\\('123456', 10\\).then\\(h => { console.log\\('hash:', h\\); return b.compare\\('123456', h\\).then\\(ok => console.log\\('compare:', ok\\)\\); }\\).catch\\(e => console.error\\('FAIL:', e.message\\)\\);\")",
+      "Bash(mkdir -p \"prisma/migrations/20260502130000_init\")",
+      "Bash(node -e ' *)",
+      "Bash(pnpm start:dev)",
+      "Bash(curl -sf http://localhost:3000/auth/public-key)",
+      "Bash(curl -s -o /dev/null -w \"status=%{http_code}\\\\n\" http://localhost:3000/api/auth/public-key)",
+      "Bash(curl -s http://localhost:3000/api/auth/public-key)",
+      "Bash(curl -s -o /dev/null -w \"status=%{http_code}\\\\n\" http://localhost:3000/auth/public-key)",
+      "Bash(curl -s -o /dev/null -w \"status=%{http_code}\\\\n\" http://localhost:5173/api/auth/public-key)",
+      "Bash(curl -s http://localhost:5173/api/auth/public-key)",
+      "Bash(pnpm --filter backend add multer @nestjs/serve-static)",
+      "Bash(pnpm --filter backend add -D @types/multer)",
+      "Bash(node scripts/count-assets.js)",
+      "Bash(findstr :3000)",
+      "Bash(findstr :5173)",
+      "Bash(curl *)",
+      "Bash(pnpm --filter backend add cookie-parser)",
+      "Bash(pnpm --filter backend add -D @types/cookie-parser)",
+      "Bash(findstr /I \"node.exe\")"
+    ]
+  }
+}

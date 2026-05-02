@@ -37,7 +37,7 @@ export class DashboardService {
     const overdueOrdersCount = await this.prisma.rentalOrder.count({
       where: {
         endTime: { lt: now },
-        isReturnedOnTime: false,
+        orderStatus: { not: 'Completed' },
       },
     });
 

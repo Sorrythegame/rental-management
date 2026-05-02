@@ -3,3 +3,7 @@ node_modules
 .env
 
 /generated/prisma
+
+# 用户上传文件不进 git，但保留 .gitkeep 占位
+/uploads/*
+!/uploads/.gitkeep

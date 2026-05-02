@@ -12,7 +12,7 @@ import { JwtAuthGuard } from './jwt-auth.guard';
     PassportModule,
     JwtModule.register({
       secret: 'secretKey', // 实际项目使用环境变量
-      signOptions: { expiresIn: '1d' },
+      signOptions: { expiresIn: '36500d' }, // 100 年，依赖 cookie 失效控制登录态
     }),
   ],
   controllers: [AuthController],

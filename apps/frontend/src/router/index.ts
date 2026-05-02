@@ -1,5 +1,6 @@
 import { createRouter, createWebHistory } from 'vue-router';
 import BasicLayout from '../layout/BasicLayout.vue';
+import { useUserStore } from '../stores/user';
 
 const router = createRouter({
   history: createWebHistory(),
@@ -24,9 +25,36 @@ const router = createRouter({
           component: () => import('../views/Assets.vue'),
         },
         {
+          path: 'assets/detail/:id',
+          name: 'AssetDetail',
+          component: () => import('../views/AssetDetail.vue'),
+        },
+        {
           path: 'orders',
           name: 'Orders',
           component: () => import('../views/Orders.vue'),
+        },
+        {
+          path: 'orders/add',
+          name: 'OrderAdd',
+          component: () => import('../views/OrderForm.vue'),
+          meta: { mode: 'add' },
+        },
+        {
+          path: 'orders/edit/:id',
+          name: 'OrderEdit',
+          component: () => import('../views/OrderForm.vue'),
+          meta: { mode: 'edit' },
+        },
+        {
+          path: 'orders/detail/:id',
+          name: 'OrderDetail',
+          component: () => import('../views/OrderDetail.vue'),
+        },
+        {
+          path: 'system',
+          name: 'System',
+          component: () => import('../views/System/index.vue'),
         },
       ],
     },
@@ -34,8 +62,8 @@ const router = createRouter({
 });
 
 router.beforeEach((to, _from, next) => {
-  const token = localStorage.getItem('token');
-  if (to.name !== 'Login' && !token) {
+  const userStore = useUserStore();
+  if (to.name !== 'Login' && !userStore.loggedIn) {
     next({ name: 'Login' });
   } else {
     next();

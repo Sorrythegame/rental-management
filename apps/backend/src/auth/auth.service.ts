@@ -2,6 +2,7 @@ import { Injectable, UnauthorizedException } from '@nestjs/common';
 import { JwtService } from '@nestjs/jwt';
 import { PrismaService } from '../prisma/prisma.service';
 import NodeRSA from 'node-rsa';
+import * as bcrypt from 'bcrypt';
 
 @Injectable()
 export class AuthService {
@@ -33,13 +34,19 @@ export class AuthService {
       where: { username },
     });
 
-    if (!admin || admin.passwordHash !== password) {
+    if (!admin) {
+      throw new UnauthorizedException('用户名或密码错误');
+    }
+
+    const passwordMatches = await bcrypt.compare(password, admin.passwordHash);
+    if (!passwordMatches) {
       throw new UnauthorizedException('用户名或密码错误');
     }
 
     const payload = { username: admin.username, sub: admin.id };
     return {
       access_token: this.jwtService.sign(payload),
+      username: admin.username,
     };
   }
 }

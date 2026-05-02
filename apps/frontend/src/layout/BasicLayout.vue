@@ -18,6 +18,9 @@
         <a-menu-item key="Orders">
           <span>订单管理</span>
         </a-menu-item>
+        <a-menu-item key="System">
+          <span>系统管理</span>
+        </a-menu-item>
       </a-menu>
     </a-layout-sider>
 
@@ -59,6 +62,7 @@
         <a-menu-item key="Dashboard">数据看板</a-menu-item>
         <a-menu-item key="Assets">资产管理</a-menu-item>
         <a-menu-item key="Orders">订单管理</a-menu-item>
+        <a-menu-item key="System">系统管理</a-menu-item>
       </a-menu>
     </a-drawer>
   </a-layout>
@@ -68,7 +72,8 @@
 import { ref, onMounted, onUnmounted, watch } from 'vue';
 import { useRouter, useRoute } from 'vue-router';
 import { useUserStore } from '../stores/user';
-import { MenuOutlined } from '@ant-design-vue/icons-vue';
+import { MenuOutlined } from '@ant-design/icons-vue';
+import request from '../utils/request';
 
 const router = useRouter();
 const route = useRoute();
@@ -103,8 +108,13 @@ const handleMenuClick = ({ key }: { key: string }) => {
   drawerVisible.value = false;
 };
 
-const handleLogout = () => {
-  userStore.logout();
+const handleLogout = async () => {
+  try {
+    await request.post('/auth/logout');
+  } catch {
+    // 即使后端 logout 失败也仍然清前端态
+  }
+  userStore.clearLogin();
   router.push('/login');
 };
 </script>

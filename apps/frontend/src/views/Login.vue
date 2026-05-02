@@ -46,13 +46,13 @@ const handleLogin = async (values: any) => {
       return;
     }
 
-    // 登录
+    // 登录：cookie 由后端 Set-Cookie 返回，前端不持有 token
     const loginRes = await request.post('/auth/login', {
       username: values.username,
       password: encryptedPassword,
     }) as any;
 
-    userStore.setToken(loginRes.access_token);
+    userStore.markLogin(loginRes?.username || values.username);
     message.success('登录成功');
     router.push('/');
   } catch (error) {

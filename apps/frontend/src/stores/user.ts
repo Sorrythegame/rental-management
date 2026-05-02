@@ -1,17 +1,24 @@
 import { defineStore } from 'pinia';
 
+// 仅用作前端 UI 提示：是否处于"已登录"态。
+// 真正的认证依赖后端 HttpOnly cookie，前端不持有 token。
+const STORAGE_KEY = 'loggedIn';
+
 export const useUserStore = defineStore('user', {
   state: () => ({
-    token: localStorage.getItem('token') || '',
+    loggedIn: localStorage.getItem(STORAGE_KEY) === '1',
+    username: '',
   }),
   actions: {
-    setToken(token: string) {
-      this.token = token;
-      localStorage.setItem('token', token);
+    markLogin(username = '') {
+      this.loggedIn = true;
+      this.username = username;
+      localStorage.setItem(STORAGE_KEY, '1');
     },
-    logout() {
-      this.token = '';
-      localStorage.removeItem('token');
+    clearLogin() {
+      this.loggedIn = false;
+      this.username = '';
+      localStorage.removeItem(STORAGE_KEY);
     },
   },
 });

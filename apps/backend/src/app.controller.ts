@@ -11,7 +11,7 @@ export class AppController {
   }
 
   // 健康检查接口，返回一段 JSON 数据验证运行状态
-  @Get('api/health')
+  @Get('health')
   getHealth(): Record<string, string> {
     return {
       status: 'ok',

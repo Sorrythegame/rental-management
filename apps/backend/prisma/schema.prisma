@@ -31,6 +31,8 @@ model DeviceModel {
   brandId Int                                   // 关联的品牌 ID
   brand   Brand   @relation(fields: [brandId], references: [id])
   assets  Asset[]                               // 关联的资产
+
+  @@unique([brandId, name]) // 同一品牌下型号名称唯一
 }
 
 enum AssetType {
@@ -43,28 +45,50 @@ enum AssetStatus {
   Damaged // 损坏
 }
 
+enum RentalStatus {
+  Rented    // 出租中
+  Available // 未出租
+}
+
 // 核心资产表
 model Asset {
-  id           Int         @id @default(autoincrement()) // 自增 ID
-  type         AssetType                                 // 资产类型
-  brandId      Int                                       // 品牌 ID
-  brand        Brand       @relation(fields: [brandId], references: [id])
-  modelId      Int                                       // 型号 ID
-  model        DeviceModel @relation(fields: [modelId], references: [id])
-  imageUrl     String                                    // 资产图片链接
-  purchaseDate DateTime                                  // 购买时间
-  price        Float                                     // 购买金额
-  status       AssetStatus                               // 当前状态
-  damageDesc   String?                                   // 损坏描述
+  id           Int          @id @default(autoincrement()) // 自增 ID
+  type         AssetType                                   // 资产类型
+  name         String?                                     // 配件名称（仅配件用）
+  sinCode      String?                                     // SIN 码（仅相机用）
+  brandId      Int?                                        // 品牌 ID（配件可空）
+  brand        Brand?       @relation(fields: [brandId], references: [id])
+  modelId      Int?                                        // 型号 ID（配件可空）
+  model        DeviceModel? @relation(fields: [modelId], references: [id])
+  imageUrls    Json                                        // 资产图片链接列表（JSON 数组）
+  purchaseDate DateTime                                    // 购买时间
+  price        Float                                       // 购买金额
+  status       AssetStatus                                 // 设备状态
+  damageDesc   String?                                     // 损坏描述
+  rentalStatus RentalStatus @default(Available)            // 出租状态
+  remark       String?                                     // 备注
+  orders       RentalOrder[]                               // 关联订单
+}
+
+enum OrderStatus {
+  NotStarted  // 未开始
+  InProgress  // 进行中
+  Completed   // 已完成
 }
 
 // 租赁订单表
 model RentalOrder {
-  id               Int      @id @default(autoincrement()) // 自增 ID
-  startTime        DateTime                               // 租赁开始时间
-  endTime          DateTime                               // 租赁结束时间
-  customerName     String?                                // 客户网名
-  amount           Float                                  // 订单金额
-  isReturnedOnTime Boolean  @default(false)               // 是否按时归还
-  remarks          String?                                // 备注
+  id               Int         @id @default(autoincrement()) // 自增 ID
+  assetId          Int?                                      // 关联资产 ID
+  asset            Asset?      @relation(fields: [assetId], references: [id])
+  sinCode          String?                                   // 设备 SIN 码
+  brandName        String?                                   // 设备品牌（快照）
+  modelName        String?                                   // 设备型号/名称（快照）
+  startTime        DateTime                                  // 租赁开始时间
+  endTime          DateTime                                  // 租赁结束时间
+  orderStatus      OrderStatus @default(NotStarted)          // 订单状态
+  amount           Float                                     // 订单金额
+  customerName     String?                                   // 客户名
+  customerPhone    String?                                   // 客户电话
+  remarks          String?                                   // 备注
 }

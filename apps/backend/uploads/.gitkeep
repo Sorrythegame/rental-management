@@ -1,0 +1,3 @@
+# 用户上传的资产图片放这里。每个文件名都是 uuid + 原后缀，确保唯一。
+# 这个目录由 NestJS ServeStaticModule 暴露在 /api/uploads/<filename>
+# 内容不进 git
