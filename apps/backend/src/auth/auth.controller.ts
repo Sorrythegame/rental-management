@@ -20,7 +20,7 @@ const COOKIE_NAME = 'token';
 const cookieOptions = () => ({
   httpOnly: true,
   sameSite: 'lax' as const,
-  secure: process.env.NODE_ENV === 'production',
+  secure: process.env.COOKIE_SECURE === 'true',
   maxAge: COOKIE_MAX_AGE_MS,
   path: '/',
 });

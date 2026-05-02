@@ -29,6 +29,7 @@ services:
       JWT_SECRET: ${JWT_SECRET}
       NODE_ENV: production
       PORT: 3000
+      COOKIE_SECURE: "false"
     volumes:
       - uploads:/app/apps/backend/uploads
     depends_on:
