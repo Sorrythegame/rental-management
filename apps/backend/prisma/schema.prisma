@@ -9,10 +9,62 @@ generator client {
   provider = "prisma-client-js"
 }
 
-// 员工模型：测试模型
-model Employee {
-  id         Int      @id @default(autoincrement()) // 自增 ID
-  name       String                                   // 员工姓名
-  department String                                   // 部门名称
-  createdAt  DateTime @default(now())               // 创建时间
+// 管理员
+model Admin {
+  id           Int      @id @default(autoincrement()) // 自增 ID
+  username     String   @unique                       // 用户名
+  passwordHash String                                 // 密码 Hash
+}
+
+// 品牌字典
+model Brand {
+  id           Int           @id @default(autoincrement()) // 自增 ID
+  name         String        @unique                       // 品牌名称
+  deviceModels DeviceModel[]                               // 关联的型号
+  assets       Asset[]                                     // 关联的资产
+}
+
+// 型号字典
+model DeviceModel {
+  id      Int     @id @default(autoincrement()) // 自增 ID
+  name    String                                // 型号名称
+  brandId Int                                   // 关联的品牌 ID
+  brand   Brand   @relation(fields: [brandId], references: [id])
+  assets  Asset[]                               // 关联的资产
+}
+
+enum AssetType {
+  Camera    // 相机
+  Accessory // 配件
+}
+
+enum AssetStatus {
+  Normal  // 正常
+  Damaged // 损坏
+}
+
+// 核心资产表
+model Asset {
+  id           Int         @id @default(autoincrement()) // 自增 ID
+  type         AssetType                                 // 资产类型
+  brandId      Int                                       // 品牌 ID
+  brand        Brand       @relation(fields: [brandId], references: [id])
+  modelId      Int                                       // 型号 ID
+  model        DeviceModel @relation(fields: [modelId], references: [id])
+  imageUrl     String                                    // 资产图片链接
+  purchaseDate DateTime                                  // 购买时间
+  price        Float                                     // 购买金额
+  status       AssetStatus                               // 当前状态
+  damageDesc   String?                                   // 损坏描述
+}
+
+// 租赁订单表
+model RentalOrder {
+  id               Int      @id @default(autoincrement()) // 自增 ID
+  startTime        DateTime                               // 租赁开始时间
+  endTime          DateTime                               // 租赁结束时间
+  customerName     String?                                // 客户网名
+  amount           Float                                  // 订单金额
+  isReturnedOnTime Boolean  @default(false)               // 是否按时归还
+  remarks          String?                                // 备注
 }

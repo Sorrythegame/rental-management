@@ -10,7 +10,14 @@
   },
   "dependencies": {
     "ant-design-vue": "^4.2.6",
-    "vue": "^3.5.32"
+    "axios": "^1.15.2",
+    "dayjs": "^1.11.20",
+    "echarts": "^6.0.0",
+    "jsencrypt": "^3.5.4",
+    "pinia": "^3.0.4",
+    "vue": "^3.5.32",
+    "vue-echarts": "^8.0.1",
+    "vue-router": "^4.6.4"
   },
   "devDependencies": {
     "@types/node": "^24.12.2",
