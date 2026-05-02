@@ -178,10 +178,33 @@ fi
 # ============================================
 log "步骤 7/7: 申请 SSL 证书..."
 
-read -p "请输入你的邮箱（用于 Let's Encrypt 注册）: " EMAIL
+# 获取服务器公网 IP（用于 IP 访问提示）
+SERVER_IP=$(curl -s --max-time 5 ifconfig.me 2>/dev/null || echo "你的服务器IP")
+
+read -p "请输入你的邮箱（用于 Let's Encrypt 注册，直接回车则跳过 SSL，先用 IP 访问）: " EMAIL
 if [ -z "$EMAIL" ]; then
-  warn "邮箱为空，跳过 SSL 证书申请。后续可手动执行 certbot 申请。"
-  log "部署完成（HTTP 模式）。访问: http://$DOMAIN"
+  warn "跳过 SSL 证书申请。当前可通过 IP 访问。"
+  echo ""
+  echo -e "${GREEN}========================================${NC}"
+  echo -e "${GREEN}  部署完成（HTTP 模式）${NC}"
+  echo -e "${GREEN}========================================${NC}"
+  echo ""
+  echo -e "${BLUE}访问地址:${NC}"
+  echo -e "  前台页面: http://${SERVER_IP}"
+  echo -e "  API 接口: http://${SERVER_IP}/api"
+  echo ""
+  echo -e "${YELLOW}域名审核通过后，执行以下命令启用 HTTPS:${NC}"
+  echo -e "  cd $PROJECT_DIR && ./enable-ssl.sh"
+  echo ""
+  echo -e "${BLUE}配置信息:${NC}"
+  echo -e "  项目目录: $PROJECT_DIR"
+  echo -e "  MySQL 密码: ${YELLOW}$MYSQL_PASS${NC}"
+  echo -e "  数据库名: camera_rental"
+  echo ""
+  echo -e "${BLUE}常用命令:${NC}"
+  echo -e "  查看状态: cd $PROJECT_DIR && $COMPOSE_CMD ps"
+  echo -e "  查看日志: cd $PROJECT_DIR && $COMPOSE_CMD logs -f"
+  echo -e "  重启服务: cd $PROJECT_DIR && $COMPOSE_CMD restart"
   exit 0
 fi
 
