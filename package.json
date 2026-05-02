@@ -3,5 +3,11 @@
   "version": "1.0.0",
   "description": "相机租赁管理系统 Monorepo",
   "private": true,
-  "scripts": {}
+  "scripts": {
+    "dev": "concurrently \"pnpm --filter backend start:dev\" \"pnpm --filter frontend dev\"",
+    "build": "pnpm --filter backend build && pnpm --filter frontend build"
+  },
+  "dependencies": {
+    "concurrently": "^9.2.1"
+  }
 }

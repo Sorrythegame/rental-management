@@ -6,7 +6,13 @@ import Antd from 'ant-design-vue';
 // 引入 Ant Design Vue 样式
 import 'ant-design-vue/dist/reset.css';
 
+import router from './router'
+import { createPinia } from 'pinia'
+
 const app = createApp(App)
+
+app.use(createPinia())
+app.use(router)
 
 // 注册全局 UI 库
 app.use(Antd)
