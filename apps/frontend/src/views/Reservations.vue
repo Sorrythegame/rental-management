@@ -40,7 +40,7 @@
         <a-select
           v-model:value="filters.sinCode"
           show-search
-          placeholder="SIN 码"
+          placeholder="S/N码"
           allow-clear
           :style="{ width: '200px' }"
           :options="sinOptions"
@@ -105,7 +105,7 @@
         <a-card v-for="r in reservations" :key="r.id" style="margin-bottom: 16px;">
           <p><strong>预定名称：</strong>{{ r.name || '-' }}</p>
           <p><strong>品牌型号：</strong>{{ r.brandName || '-' }} {{ r.modelName || '' }}</p>
-          <p><strong>SIN 码：</strong>{{ r.sinCode || '-' }}</p>
+          <p><strong>S/N码：</strong>{{ r.sinCode || '-' }}</p>
           <p v-if="r.accessories?.length"><strong>配件：</strong>{{ accessoryNames(r) }}</p>
           <p><strong>租赁日期：</strong>{{ formatTime(r.startTime) }} ~ {{ formatTime(r.endTime) }}</p>
           <p>
@@ -223,7 +223,7 @@ const filters = ref<{
 const columns = [
   { title: '预定名称', dataIndex: 'name', key: 'name', width: 160, ellipsis: true },
   { title: '品牌型号', key: 'brandModel', width: 180 },
-  { title: 'SIN 码', dataIndex: 'sinCode', key: 'sinCode', width: 140 },
+  { title: 'S/N码', dataIndex: 'sinCode', key: 'sinCode', width: 140 },
   { title: '配件', key: 'accessories', width: 180, ellipsis: true },
   { title: '租赁日期', key: 'timeRange', width: 220 },
   { title: '状态', key: 'status', width: 100 },

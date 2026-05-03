@@ -106,7 +106,7 @@
                 <div style="flex: 1;">
                   <p><strong>类型：</strong>相机</p>
                   <p><strong>品牌型号：</strong>{{ asset.brand?.name }} - {{ asset.model?.name }}</p>
-                  <p><strong>SIN 码：</strong>{{ asset.sinCode }}</p>
+                  <p><strong>S/N码：</strong>{{ asset.sinCode }}</p>
                   <p><strong>价格：</strong>¥{{ asset.price }}</p>
                   <p>
                     <strong>状态：</strong>
@@ -288,8 +288,8 @@
             </a-select>
           </a-form-item>
 
-          <a-form-item label="SIN 码" name="sinCode" :rules="[{ required: true, message: '请输入 SIN 码' }]">
-            <a-input v-model:value="assetForm.sinCode" placeholder="设备机身 SIN 码" />
+          <a-form-item label="S/N码" name="sinCode" :rules="[{ required: true, message: '请输入 S/N码' }]">
+            <a-input v-model:value="assetForm.sinCode" placeholder="设备机身 S/N码" />
           </a-form-item>
         </template>
 
@@ -532,7 +532,7 @@ const cameraColumns = [
   { title: '品牌', key: 'brandName', width: 120 },
   { title: '型号', key: 'modelOrName', width: 140 },
   { title: '图片', key: 'imageUrl', width: 80 },
-  { title: 'SIN 码', key: 'sinCode', width: 140 },
+  { title: 'S/N码', key: 'sinCode', width: 140 },
   { title: '购买金额', dataIndex: 'price', key: 'price', width: 100 },
   {
     title: '购买时间',

@@ -40,7 +40,7 @@
         <a-select
           v-model:value="filters.sinCode"
           show-search
-          placeholder="SIN 码"
+          placeholder="S/N码"
           allow-clear
           :style="{ width: '200px' }"
           :options="sinOptions"
@@ -104,7 +104,7 @@
         <a-card v-for="order in orders" :key="order.id" style="margin-bottom: 16px;">
           <p><strong>订单名称：</strong>{{ order.name || '-' }}</p>
           <p><strong>品牌型号：</strong>{{ order.brandName || '-' }} {{ order.modelName || '' }}</p>
-          <p><strong>SIN 码：</strong>{{ order.sinCode || '-' }}</p>
+          <p><strong>S/N码：</strong>{{ order.sinCode || '-' }}</p>
           <p v-if="order.accessories?.length"><strong>配件：</strong>{{ accessoryNames(order) }}</p>
           <p><strong>租赁时间：</strong>{{ formatTime(order.startTime) }} ~ {{ formatTime(order.endTime) }}</p>
           <p>
@@ -174,7 +174,7 @@ const filters = ref<{
 const columns = [
   { title: '订单名称', dataIndex: 'name', key: 'name', width: 160, ellipsis: true },
   { title: '品牌型号', key: 'brandModel', width: 180 },
-  { title: 'SIN 码', dataIndex: 'sinCode', key: 'sinCode', width: 140 },
+  { title: 'S/N码', dataIndex: 'sinCode', key: 'sinCode', width: 140 },
   { title: '配件', key: 'accessories', width: 180, ellipsis: true },
   { title: '租赁时间', key: 'timeRange', width: 220 },
   { title: '订单状态', key: 'orderStatus', width: 100 },

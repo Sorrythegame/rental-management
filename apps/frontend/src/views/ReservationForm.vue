@@ -14,12 +14,12 @@
           <a-input v-model:value="form.name" placeholder="请输入预定名称" />
         </a-form-item>
 
-        <!-- SIN 码：可搜索下拉，选中后带出品牌型号与图片 -->
-        <a-form-item label="SIN 码" name="sinCode" :rules="[{ required: true, message: '请选择 SIN 码' }]">
+        <!-- S/N码：可搜索下拉，选中后带出品牌型号与图片 -->
+        <a-form-item label="S/N码" name="sinCode" :rules="[{ required: true, message: '请选择 S/N码' }]">
           <a-select
             v-model:value="form.sinCode"
             show-search
-            placeholder="搜索或选择设备 SIN 码"
+            placeholder="搜索或选择设备 S/N码"
             :options="sinOptions"
             :filter-option="filterSin"
             @change="onSinChange"
@@ -28,12 +28,12 @@
 
         <!-- 品牌型号：级联选择，只读 -->
         <a-form-item label="品牌型号" name="brandModel"
-          :rules="[{ required: true, message: '请通过 SIN 码选择设备', validator: validateBrandModel }]"
+          :rules="[{ required: true, message: '请通过 S/N码选择设备', validator: validateBrandModel }]"
         >
           <a-cascader
             v-model:value="form.brandModel"
             :options="cascaderOptions"
-            placeholder="由 SIN 码自动带出"
+            placeholder="由 S/N码自动带出"
             disabled
           />
         </a-form-item>
@@ -199,7 +199,7 @@ const filterSin = (input: string, option: any) => {
 };
 
 const validateBrandModel = () => {
-  return form.value.brandModel.length === 2 ? Promise.resolve() : Promise.reject(new Error('请通过 SIN 码选择设备'));
+  return form.value.brandModel.length === 2 ? Promise.resolve() : Promise.reject(new Error('请通过 S/N码选择设备'));
 };
 
 const goBack = () => router.push({ name: 'Reservations' });

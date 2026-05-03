@@ -14,7 +14,7 @@
         <a-descriptions :column="isMobile ? 1 : 2" bordered size="small">
           <a-descriptions-item label="预定 ID">{{ reservation.id }}</a-descriptions-item>
           <a-descriptions-item label="预定名称">{{ reservation.name || '-' }}</a-descriptions-item>
-          <a-descriptions-item label="SIN 码">{{ reservation.sinCode || '-' }}</a-descriptions-item>
+          <a-descriptions-item label="S/N码">{{ reservation.sinCode || '-' }}</a-descriptions-item>
           <a-descriptions-item label="品牌">{{ reservation.brandName || '-' }}</a-descriptions-item>
           <a-descriptions-item label="型号 / 名称">{{ reservation.modelName || '-' }}</a-descriptions-item>
           <a-descriptions-item label="预定状态">

@@ -19,7 +19,7 @@
         <template v-if="asset.type === 'Camera'">
           <a-descriptions-item label="品牌">{{ asset.brand?.name || '-' }}</a-descriptions-item>
           <a-descriptions-item label="型号">{{ asset.model?.name || '-' }}</a-descriptions-item>
-          <a-descriptions-item label="SIN 码" :span="2">{{ asset.sinCode || '-' }}</a-descriptions-item>
+          <a-descriptions-item label="S/N码" :span="2">{{ asset.sinCode || '-' }}</a-descriptions-item>
         </template>
         <template v-else>
           <a-descriptions-item label="配件名称" :span="2">{{ asset.name || '-' }}</a-descriptions-item>

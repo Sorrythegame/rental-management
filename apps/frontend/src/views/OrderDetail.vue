@@ -14,7 +14,7 @@
         <a-descriptions :column="isMobile ? 1 : 2" bordered size="small">
           <a-descriptions-item label="订单 ID">{{ order.id }}</a-descriptions-item>
           <a-descriptions-item label="订单名称">{{ order.name || '-' }}</a-descriptions-item>
-          <a-descriptions-item label="SIN 码">{{ order.sinCode || '-' }}</a-descriptions-item>
+          <a-descriptions-item label="S/N码">{{ order.sinCode || '-' }}</a-descriptions-item>
           <a-descriptions-item label="品牌">{{ order.brandName || '-' }}</a-descriptions-item>
           <a-descriptions-item label="型号 / 名称">{{ order.modelName || '-' }}</a-descriptions-item>
           <a-descriptions-item label="订单状态">
