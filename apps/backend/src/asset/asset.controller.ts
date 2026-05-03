@@ -23,7 +23,6 @@ interface AssetInput {
   price?: number;
   status?: AssetStatus;
   damageDesc?: string | null;
-  rentalStatus?: RentalStatus;
   remark?: string | null;
 }
 
@@ -53,10 +52,6 @@ export class AssetController {
     if (!input.status || (input.status !== 'Normal' && input.status !== 'Damaged')) {
       throw new BadRequestException('status 必填且必须是 Normal/Damaged');
     }
-    const rentalStatus: RentalStatus = (input.rentalStatus as RentalStatus) || 'Available';
-    if (rentalStatus !== 'Rented' && rentalStatus !== 'Available') {
-      throw new BadRequestException('rentalStatus 必须是 Rented/Available');
-    }
 
     const base: Prisma.AssetUncheckedCreateInput = {
       type: input.type,
@@ -65,7 +60,6 @@ export class AssetController {
       price: Number(input.price),
       status: input.status,
       damageDesc: input.status === 'Damaged' ? input.damageDesc || null : null,
-      rentalStatus,
       remark: input.remark ?? null,
       // 默认置空，下方按 type 覆盖
       brandId: null,
@@ -99,22 +93,20 @@ export class AssetController {
   }
 
   @Get()
-  findAll(
+  async findAll(
     @Query('brandId') brandIdQ?: string,
     @Query('modelId') modelIdQ?: string,
-    @Query('rentalStatus') rentalStatus?: string,
     @Query('status') status?: string,
     @Query('type') type?: string,
     @Query('sinCode') sinCode?: string,
+    @Query('page') pageQ?: string,
+    @Query('pageSize') pageSizeQ?: string,
   ) {
     const where: Prisma.AssetWhereInput = {};
     const brandId = toPositiveInt(brandIdQ);
     const modelId = toPositiveInt(modelIdQ);
     if (brandId) where.brandId = brandId;
     if (modelId) where.modelId = modelId;
-    if (rentalStatus === 'Rented' || rentalStatus === 'Available') {
-      where.rentalStatus = rentalStatus;
-    }
     if (status === 'Normal' || status === 'Damaged') {
       where.status = status;
     }
@@ -124,19 +116,63 @@ export class AssetController {
     if (sinCode?.trim()) {
       where.sinCode = { contains: sinCode.trim() };
     }
-    return this.prisma.asset.findMany({
+    const page = toPositiveInt(pageQ);
+    const pageSize = toPositiveInt(pageSizeQ);
+    const listQuery: any = {
       where,
-      include: { brand: true, model: true },
+      include: {
+        brand: true,
+        model: true,
+        orders: { where: { orderStatus: { notIn: ['Completed', 'ManuallyStopped'] } }, take: 1 },
+        orderAccessories: { where: { rentalOrder: { orderStatus: { notIn: ['Completed', 'ManuallyStopped'] } } }, take: 1 },
+      },
       orderBy: { id: 'desc' },
-    });
+    };
+    if (page !== undefined && pageSize !== undefined) {
+      const skip = (page - 1) * pageSize;
+      const [assets, total] = await Promise.all([
+        this.prisma.asset.findMany({ ...listQuery, skip, take: pageSize }),
+        this.prisma.asset.count({ where }),
+      ]);
+      const list = (assets as any[]).map(({ orders, orderAccessories, ...asset }) => ({
+        ...asset,
+        rentalStatus:
+          orders.length > 0 || orderAccessories.length > 0
+            ? ('Rented' as RentalStatus)
+            : ('Available' as RentalStatus),
+      }));
+      return { list, total };
+    }
+    const assets = (await this.prisma.asset.findMany(listQuery)) as any[];
+    return assets.map(({ orders, orderAccessories, ...asset }) => ({
+      ...asset,
+      rentalStatus:
+        orders.length > 0 || orderAccessories.length > 0
+          ? ('Rented' as RentalStatus)
+          : ('Available' as RentalStatus),
+    }));
   }
 
   @Get(':id')
-  findOne(@Param('id') id: string) {
-    return this.prisma.asset.findUnique({
+  async findOne(@Param('id') id: string) {
+    const asset = await this.prisma.asset.findUnique({
       where: { id: Number(id) },
-      include: { brand: true, model: true },
+      include: {
+        brand: true,
+        model: true,
+        orders: { where: { orderStatus: { notIn: ['Completed', 'ManuallyStopped'] } }, take: 1 },
+        orderAccessories: { where: { rentalOrder: { orderStatus: { notIn: ['Completed', 'ManuallyStopped'] } } }, take: 1 },
+      },
     });
+    if (!asset) return null;
+    const { orders, orderAccessories, ...rest } = asset;
+    return {
+      ...rest,
+      rentalStatus:
+        orders.length > 0 || orderAccessories.length > 0
+          ? ('Rented' as RentalStatus)
+          : ('Available' as RentalStatus),
+    };
   }
 
   @Put(':id')
@@ -150,5 +186,69 @@ export class AssetController {
   @Delete(':id')
   remove(@Param('id') id: string) {
     return this.prisma.asset.delete({ where: { id: Number(id) } });
+  }
+
+  @Get(':id/occupancy')
+  async occupancy(
+    @Param('id') id: string,
+    @Query('excludeOrderId') excludeOrderId?: string,
+    @Query('excludeReservationId') excludeReservationId?: string,
+  ) {
+    const assetId = Number(id);
+
+    const orderWhere: any = {
+      assetId,
+      orderStatus: { notIn: ['Completed', 'ManuallyStopped'] },
+    };
+    if (excludeOrderId) {
+      orderWhere.id = { not: Number(excludeOrderId) };
+    }
+    const orders = await this.prisma.rentalOrder.findMany({
+      where: orderWhere,
+      select: { id: true, name: true, startTime: true, endTime: true, customerName: true },
+    });
+
+    const orderAccessoryWhere: any = {
+      assetId,
+      rentalOrder: { orderStatus: { notIn: ['Completed', 'ManuallyStopped'] } },
+    };
+    if (excludeOrderId) {
+      orderAccessoryWhere.rentalOrderId = { not: Number(excludeOrderId) };
+    }
+    const orderAccessories = await this.prisma.rentalOrderAccessory.findMany({
+      where: orderAccessoryWhere,
+      include: { rentalOrder: { select: { id: true, name: true, startTime: true, endTime: true, customerName: true } } },
+    });
+
+    const reservationWhere: any = {
+      assetId,
+      status: 'Confirmed',
+    };
+    if (excludeReservationId) {
+      reservationWhere.id = { not: Number(excludeReservationId) };
+    }
+    const reservations = await this.prisma.reservation.findMany({
+      where: reservationWhere,
+      select: { id: true, name: true, startTime: true, endTime: true, customerName: true },
+    });
+
+    const reservationAccessoryWhere: any = {
+      assetId,
+      reservation: { status: 'Confirmed' },
+    };
+    if (excludeReservationId) {
+      reservationAccessoryWhere.reservationId = { not: Number(excludeReservationId) };
+    }
+    const reservationAccessories = await this.prisma.reservationAccessory.findMany({
+      where: reservationAccessoryWhere,
+      include: { reservation: { select: { id: true, name: true, startTime: true, endTime: true, customerName: true } } },
+    });
+
+    return [
+      ...orders.map((o) => ({ startTime: o.startTime, endTime: o.endTime, type: 'order' as const, id: o.id, name: o.name || `订单 #${o.id}`, customerName: o.customerName })),
+      ...orderAccessories.map((oa) => ({ startTime: oa.rentalOrder.startTime, endTime: oa.rentalOrder.endTime, type: 'order' as const, id: oa.rentalOrder.id, name: oa.rentalOrder.name || `订单 #${oa.rentalOrder.id}`, customerName: oa.rentalOrder.customerName })),
+      ...reservations.map((r) => ({ startTime: r.startTime, endTime: r.endTime, type: 'reservation' as const, id: r.id, name: r.name || `预定 #${r.id}`, customerName: r.customerName })),
+      ...reservationAccessories.map((ra) => ({ startTime: ra.reservation.startTime, endTime: ra.reservation.endTime, type: 'reservation' as const, id: ra.reservation.id, name: ra.reservation.name || `预定 #${ra.reservation.id}`, customerName: ra.reservation.customerName })),
+    ];
   }
 }

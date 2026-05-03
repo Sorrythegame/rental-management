@@ -28,7 +28,13 @@ export class DashboardService {
     const totalOrders = orders.length;
     const totalRevenue = orders.reduce((sum, order) => sum + order.amount, 0);
 
-    // 2. 异常卡：当前状态为“损坏”的资产数量；逾期订单数
+    // 2. 资产总价值
+    const totalAssetValueAgg = await this.prisma.asset.aggregate({
+      _sum: { price: true },
+    });
+    const totalAssetValue = totalAssetValueAgg._sum.price || 0;
+
+    // 3. 异常卡：当前状态为”损坏”的资产数量；逾期订单数
     const damagedAssetsCount = await this.prisma.asset.count({
       where: { status: 'Damaged' },
     });
@@ -37,7 +43,7 @@ export class DashboardService {
     const overdueOrdersCount = await this.prisma.rentalOrder.count({
       where: {
         endTime: { lt: now },
-        orderStatus: { not: 'Completed' },
+        orderStatus: { notIn: ['Completed', 'ManuallyStopped'] },
       },
     });
 
@@ -95,7 +101,7 @@ export class DashboardService {
     ];
 
     return {
-      metrics: { totalOrders, totalRevenue },
+      metrics: { totalOrders, totalRevenue, totalAssetValue },
       warnings: { damagedAssetsCount, overdueOrdersCount },
       charts: {
         orderTrend,

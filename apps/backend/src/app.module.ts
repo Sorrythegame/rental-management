@@ -9,6 +9,7 @@ import { BrandModule } from './brand/brand.module';
 import { DeviceModelModule } from './device-model/device-model.module';
 import { AssetModule } from './asset/asset.module';
 import { RentalOrderModule } from './rental-order/rental-order.module';
+import { ReservationModule } from './reservation/reservation.module';
 import { DashboardModule } from './dashboard/dashboard.module';
 import { UploadModule } from './upload/upload.module';
 
@@ -24,6 +25,7 @@ import { UploadModule } from './upload/upload.module';
     DeviceModelModule,
     AssetModule,
     RentalOrderModule,
+    ReservationModule,
     DashboardModule,
     UploadModule,
   ],

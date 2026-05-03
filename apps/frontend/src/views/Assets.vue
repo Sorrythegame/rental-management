@@ -5,136 +5,254 @@
         <a-button type="primary" @click="openAddAssetModal">新增资产</a-button>
       </template>
 
-      <!-- 筛选区 -->
-      <div class="filter-bar">
-        <a-cascader
-          v-model:value="filters.brandModel"
-          :options="cascaderOptions"
-          placeholder="品牌 / 型号"
-          change-on-select
-          allow-clear
-          :style="{ width: '260px' }"
-          @change="onFilterChange"
-        />
-        <a-select
-          v-model:value="filters.rentalStatus"
-          placeholder="出租状态"
-          allow-clear
-          :style="{ width: '160px' }"
-          @change="onFilterChange"
-        >
-          <a-select-option value="Rented">出租中</a-select-option>
-          <a-select-option value="Available">未出租</a-select-option>
-        </a-select>
-        <a-select
-          v-model:value="filters.status"
-          placeholder="设备状态"
-          allow-clear
-          :style="{ width: '160px' }"
-          @change="onFilterChange"
-        >
-          <a-select-option value="Normal">正常</a-select-option>
-          <a-select-option value="Damaged">损坏</a-select-option>
-        </a-select>
-        <a-button @click="resetFilters">重置</a-button>
-      </div>
-
-      <!-- 桌面端表格展示 -->
-      <a-table
-        v-if="!isMobile"
-        :columns="columns"
-        :data-source="assets"
-        :row-key="(record: any) => record.id"
-        :loading="loading"
-        :pagination="false"
-        :scroll="{ x: 1100 }"
-      >
-        <template #bodyCell="{ column, record }">
-          <template v-if="column.key === 'imageUrl'">
-            <img
-              v-if="firstImageUrl(record)"
-              :src="firstImageUrl(record)"
-              alt="资产图片"
-              style="max-height: 50px; max-width: 50px; object-fit: cover;"
+      <a-tabs v-model:activeKey="activeTab" @change="onTabChange">
+        <a-tab-pane key="Camera" tab="相机">
+          <!-- 相机筛选区 -->
+          <div class="filter-bar">
+            <a-cascader
+              v-model:value="cameraFilters.brandModel"
+              :options="cascaderOptions"
+              placeholder="品牌 / 型号"
+              change-on-select
+              allow-clear
+              :style="{ width: '260px' }"
+              @change="onCameraFilterChange"
             />
-          </template>
-          <template v-if="column.key === 'type'">
-            <a-tag color="blue">{{ record.type === 'Camera' ? '相机' : '配件' }}</a-tag>
-          </template>
-          <template v-if="column.key === 'brandName'">
-            {{ record.brand?.name || '-' }}
-          </template>
-          <template v-if="column.key === 'modelOrName'">
-            {{ record.type === 'Camera' ? record.model?.name : record.name }}
-          </template>
-          <template v-if="column.key === 'sinCode'">
-            <a-tooltip v-if="record.type === 'Camera' && record.sinCode" title="点击新增订单">
-              <a-button type="link" size="small" style="padding: 0;" @click="goCreateOrder(record)">
-                {{ record.sinCode }}
-              </a-button>
-            </a-tooltip>
-            <span v-else>-</span>
-          </template>
-          <template v-if="column.key === 'rentalStatus'">
-            <a-tag :color="record.rentalStatus === 'Rented' ? 'orange' : 'default'">
-              {{ record.rentalStatus === 'Rented' ? '出租中' : '未出租' }}
-            </a-tag>
-          </template>
-          <template v-if="column.key === 'status'">
-            <a-tag :color="record.status === 'Normal' ? 'green' : 'red'">
-              {{ record.status === 'Normal' ? '正常' : '损坏' }}
-            </a-tag>
-          </template>
-          <template v-if="column.key === 'actions'">
-            <a-space>
-              <a-button type="link" size="small" @click="goDetail(record)">查看</a-button>
-              <a-button type="link" size="small" @click="openEditAssetModal(record)">编辑</a-button>
-              <a-button type="link" size="small" danger @click="confirmDeleteAsset(record)">删除</a-button>
-            </a-space>
-          </template>
-        </template>
-      </a-table>
+            <a-select
+              v-model:value="cameraFilters.status"
+              placeholder="设备状态"
+              allow-clear
+              :style="{ width: '160px' }"
+              @change="onCameraFilterChange"
+            >
+              <a-select-option value="Normal">正常</a-select-option>
+              <a-select-option value="Damaged">损坏</a-select-option>
+            </a-select>
+            <a-button @click="resetCameraFilters">重置</a-button>
+          </div>
 
-      <!-- 移动端卡片展示 -->
-      <div v-else>
-        <a-empty v-if="!assets.length && !loading" description="暂无资产" />
-        <a-card v-for="asset in assets" :key="asset.id" style="margin-bottom: 16px;">
-          <div style="display: flex; gap: 16px;">
-            <div style="width: 80px; height: 80px; background: #eee; flex-shrink: 0; display: flex; align-items: center; justify-content: center; overflow: hidden;">
-              <img
-                v-if="firstImageUrl(asset)"
-                :src="firstImageUrl(asset)"
-                alt="图片"
-                style="max-width: 100%; max-height: 100%; object-fit: cover;"
-              />
-              <span v-else>无图</span>
-            </div>
-            <div style="flex: 1;">
-              <p><strong>类型：</strong>{{ asset.type === 'Camera' ? '相机' : '配件' }}</p>
-              <p v-if="asset.type === 'Camera'">
-                <strong>品牌型号：</strong>{{ asset.brand?.name }} - {{ asset.model?.name }}
-              </p>
-              <p v-else><strong>名称：</strong>{{ asset.name }}</p>
-              <p v-if="asset.type === 'Camera'"><strong>SIN 码：</strong>{{ asset.sinCode }}</p>
-              <p><strong>价格：</strong>¥{{ asset.price }}</p>
-              <p>
-                <strong>状态：</strong>
-                <a-tag :color="asset.status === 'Normal' ? 'green' : 'red'">
-                  {{ asset.status === 'Normal' ? '正常' : '损坏' }}
+          <!-- 桌面端表格展示 -->
+          <a-table
+            v-if="!isMobile"
+            :columns="cameraColumns"
+            :data-source="cameraAssets"
+            :row-key="(record: any) => record.id"
+            :loading="loading"
+            :pagination="pagination"
+            :scroll="{ x: 1100 }"
+            @change="handleTableChange"
+          >
+            <template #bodyCell="{ column, record }">
+              <template v-if="column.key === 'imageUrl'">
+                <img
+                  v-if="firstImageUrl(record)"
+                  :src="firstImageUrl(record)"
+                  alt="资产图片"
+                  style="max-height: 50px; max-width: 50px; object-fit: cover;"
+                />
+              </template>
+              <template v-if="column.key === 'type'">
+                <a-tag color="blue">相机</a-tag>
+              </template>
+              <template v-if="column.key === 'brandName'">
+                {{ record.brand?.name || '-' }}
+              </template>
+              <template v-if="column.key === 'modelOrName'">
+                {{ record.model?.name || '-' }}
+              </template>
+              <template v-if="column.key === 'sinCode'">
+                <a-tooltip v-if="record.sinCode" title="点击新增订单">
+                  <a-button type="link" size="small" style="padding: 0;" @click="goCreateOrder(record)">
+                    {{ record.sinCode }}
+                  </a-button>
+                </a-tooltip>
+                <span v-else>-</span>
+              </template>
+              <template v-if="column.key === 'rentalStatus'">
+                <a-tag :color="record.rentalStatus === 'Rented' ? 'green' : 'default'">
+                  {{ record.rentalStatus === 'Rented' ? '出租中' : '未出租' }}
                 </a-tag>
-                <a-tag :color="asset.rentalStatus === 'Rented' ? 'orange' : 'default'">
-                  {{ asset.rentalStatus === 'Rented' ? '出租中' : '未出租' }}
+              </template>
+              <template v-if="column.key === 'status'">
+                <a-tag :color="record.status === 'Normal' ? 'green' : 'red'">
+                  {{ record.status === 'Normal' ? '正常' : '损坏' }}
                 </a-tag>
-              </p>
-            </div>
+              </template>
+              <template v-if="column.key === 'actions'">
+                <a-space>
+                  <a-button type="link" size="small" @click="goDetail(record)">查看</a-button>
+                  <a-button type="link" size="small" @click="openCalendarModal(record)">占用情况</a-button>
+                  <a-button type="link" size="small" @click="openEditAssetModal(record)">编辑</a-button>
+                  <a-button type="link" size="small" danger @click="confirmDeleteAsset(record)">删除</a-button>
+                </a-space>
+              </template>
+            </template>
+          </a-table>
+
+          <!-- 移动端卡片展示 -->
+          <div v-else>
+            <a-empty v-if="!cameraAssets.length && !loading" description="暂无相机" />
+            <a-card v-for="asset in cameraAssets" :key="asset.id" style="margin-bottom: 16px;">
+              <div style="display: flex; gap: 16px;">
+                <div style="width: 80px; height: 80px; background: #eee; flex-shrink: 0; display: flex; align-items: center; justify-content: center; overflow: hidden;">
+                  <img
+                    v-if="firstImageUrl(asset)"
+                    :src="firstImageUrl(asset)"
+                    alt="图片"
+                    style="max-width: 100%; max-height: 100%; object-fit: cover;"
+                  />
+                  <span v-else>无图</span>
+                </div>
+                <div style="flex: 1;">
+                  <p><strong>类型：</strong>相机</p>
+                  <p><strong>品牌型号：</strong>{{ asset.brand?.name }} - {{ asset.model?.name }}</p>
+                  <p><strong>SIN 码：</strong>{{ asset.sinCode }}</p>
+                  <p><strong>价格：</strong>¥{{ asset.price }}</p>
+                  <p>
+                    <strong>状态：</strong>
+                    <a-tag :color="asset.status === 'Normal' ? 'green' : 'red'">
+                      {{ asset.status === 'Normal' ? '正常' : '损坏' }}
+                    </a-tag>
+                    <a-tag :color="asset.rentalStatus === 'Rented' ? 'green' : 'default'">
+                      {{ asset.rentalStatus === 'Rented' ? '出租中' : '未出租' }}
+                    </a-tag>
+                  </p>
+                </div>
+              </div>
+              <div style="display: flex; justify-content: flex-end; gap: 8px; margin-top: 12px;">
+                <a-button size="small" @click="goDetail(asset)">查看</a-button>
+                <a-button size="small" @click="openCalendarModal(asset)">占用情况</a-button>
+                <a-button size="small" @click="openEditAssetModal(asset)">编辑</a-button>
+                <a-button size="small" danger @click="confirmDeleteAsset(asset)">删除</a-button>
+              </div>
+            </a-card>
+            <a-pagination
+              v-if="pagination.total > 0"
+              v-model:current="pagination.current"
+              v-model:pageSize="pagination.pageSize"
+              :total="pagination.total"
+              :page-size-options="pagination.pageSizeOptions"
+              show-size-changer
+              :show-total="pagination.showTotal"
+              style="margin-top: 16px; text-align: right;"
+              @change="fetchAssets"
+            />
           </div>
-          <div style="display: flex; justify-content: flex-end; gap: 8px; margin-top: 12px;">
-            <a-button size="small" @click="goDetail(asset)">查看</a-button>
-            <a-button size="small" @click="openEditAssetModal(asset)">编辑</a-button>
-            <a-button size="small" danger @click="confirmDeleteAsset(asset)">删除</a-button>
+        </a-tab-pane>
+
+        <a-tab-pane key="Accessory" tab="配件">
+          <!-- 配件筛选区 -->
+          <div class="filter-bar">
+            <a-select
+              v-model:value="accessoryFilters.status"
+              placeholder="设备状态"
+              allow-clear
+              :style="{ width: '160px' }"
+              @change="onAccessoryFilterChange"
+            >
+              <a-select-option value="Normal">正常</a-select-option>
+              <a-select-option value="Damaged">损坏</a-select-option>
+            </a-select>
+            <a-button @click="resetAccessoryFilters">重置</a-button>
           </div>
-        </a-card>
-      </div>
+
+          <!-- 桌面端表格展示 -->
+          <a-table
+            v-if="!isMobile"
+            :columns="accessoryColumns"
+            :data-source="accessoryAssets"
+            :row-key="(record: any) => record.id"
+            :loading="loading"
+            :pagination="pagination"
+            :scroll="{ x: 900 }"
+            @change="handleTableChange"
+          >
+            <template #bodyCell="{ column, record }">
+              <template v-if="column.key === 'imageUrl'">
+                <img
+                  v-if="firstImageUrl(record)"
+                  :src="firstImageUrl(record)"
+                  alt="资产图片"
+                  style="max-height: 50px; max-width: 50px; object-fit: cover;"
+                />
+              </template>
+              <template v-if="column.key === 'type'">
+                <a-tag color="purple">配件</a-tag>
+              </template>
+              <template v-if="column.key === 'name'">
+                {{ record.name || '-' }}
+              </template>
+              <template v-if="column.key === 'rentalStatus'">
+                <a-tag :color="record.rentalStatus === 'Rented' ? 'green' : 'default'">
+                  {{ record.rentalStatus === 'Rented' ? '出租中' : '未出租' }}
+                </a-tag>
+              </template>
+              <template v-if="column.key === 'status'">
+                <a-tag :color="record.status === 'Normal' ? 'green' : 'red'">
+                  {{ record.status === 'Normal' ? '正常' : '损坏' }}
+                </a-tag>
+              </template>
+              <template v-if="column.key === 'actions'">
+                <a-space>
+                  <a-button type="link" size="small" @click="goDetail(record)">查看</a-button>
+                  <a-button type="link" size="small" @click="openCalendarModal(record)">占用情况</a-button>
+                  <a-button type="link" size="small" @click="openEditAssetModal(record)">编辑</a-button>
+                  <a-button type="link" size="small" danger @click="confirmDeleteAsset(record)">删除</a-button>
+                </a-space>
+              </template>
+            </template>
+          </a-table>
+
+          <!-- 移动端卡片展示 -->
+          <div v-else>
+            <a-empty v-if="!accessoryAssets.length && !loading" description="暂无配件" />
+            <a-card v-for="asset in accessoryAssets" :key="asset.id" style="margin-bottom: 16px;">
+              <div style="display: flex; gap: 16px;">
+                <div style="width: 80px; height: 80px; background: #eee; flex-shrink: 0; display: flex; align-items: center; justify-content: center; overflow: hidden;">
+                  <img
+                    v-if="firstImageUrl(asset)"
+                    :src="firstImageUrl(asset)"
+                    alt="图片"
+                    style="max-width: 100%; max-height: 100%; object-fit: cover;"
+                  />
+                  <span v-else>无图</span>
+                </div>
+                <div style="flex: 1;">
+                  <p><strong>类型：</strong>配件</p>
+                  <p><strong>名称：</strong>{{ asset.name }}</p>
+                  <p><strong>价格：</strong>¥{{ asset.price }}</p>
+                  <p>
+                    <strong>状态：</strong>
+                    <a-tag :color="asset.status === 'Normal' ? 'green' : 'red'">
+                      {{ asset.status === 'Normal' ? '正常' : '损坏' }}
+                    </a-tag>
+                    <a-tag :color="asset.rentalStatus === 'Rented' ? 'green' : 'default'">
+                      {{ asset.rentalStatus === 'Rented' ? '出租中' : '未出租' }}
+                    </a-tag>
+                  </p>
+                </div>
+              </div>
+              <div style="display: flex; justify-content: flex-end; gap: 8px; margin-top: 12px;">
+                <a-button size="small" @click="goDetail(asset)">查看</a-button>
+                <a-button size="small" @click="openCalendarModal(asset)">占用情况</a-button>
+                <a-button size="small" @click="openEditAssetModal(asset)">编辑</a-button>
+                <a-button size="small" danger @click="confirmDeleteAsset(asset)">删除</a-button>
+              </div>
+            </a-card>
+            <a-pagination
+              v-if="pagination.total > 0"
+              v-model:current="pagination.current"
+              v-model:pageSize="pagination.pageSize"
+              :total="pagination.total"
+              :page-size-options="pagination.pageSizeOptions"
+              show-size-changer
+              :show-total="pagination.showTotal"
+              style="margin-top: 16px; text-align: right;"
+              @change="fetchAssets"
+            />
+          </div>
+        </a-tab-pane>
+      </a-tabs>
     </a-card>
 
     <!-- 新增/编辑资产弹窗 -->
@@ -218,13 +336,6 @@
           <a-textarea v-model:value="assetForm.damageDesc" />
         </a-form-item>
 
-        <a-form-item label="租赁状态" name="rentalStatus" :rules="[{ required: true, message: '请选择租赁状态' }]">
-          <a-radio-group v-model:value="assetForm.rentalStatus">
-            <a-radio value="Rented">出租中</a-radio>
-            <a-radio value="Available">未出租</a-radio>
-          </a-radio-group>
-        </a-form-item>
-
         <a-form-item label="备注" name="remark">
           <a-textarea v-model:value="assetForm.remark" :rows="2" placeholder="可选" />
         </a-form-item>
@@ -242,6 +353,47 @@
         }"
       />
     </a-modal>
+
+    <!-- 占用情况日历弹窗 -->
+    <a-modal
+      v-model:open="calendarVisible"
+      :title="calendarAsset?.type === 'Camera' ? `${calendarAsset?.brand?.name || ''} ${calendarAsset?.model?.name || ''} (${calendarAsset?.sinCode}) 占用情况` : `${calendarAsset?.name || ''} 占用情况`"
+      :footer="null"
+      width="900px"
+      @cancel="calendarVisible = false"
+    >
+      <a-spin :spinning="calendarLoading">
+        <div class="calendar-wrapper">
+          <a-button class="cal-nav-btn" size="large" @click="prevMonth">
+            <LeftOutlined />
+          </a-button>
+          <a-calendar v-model:value="calendarDate" class="cal-body">
+            <template #dateCellRender="{ current }">
+              <div style="min-height: 50px">
+                <a-tooltip v-if="getOccupanciesForDate(current).length" placement="top">
+                  <template #title>
+                    <template v-for="(occ, idx) in getOccupanciesForDate(current)" :key="occ.id + '-' + occ.type">
+                      <div v-if="idx > 0" style="margin-top: 8px; border-top: 1px solid rgba(255,255,255,0.2); padding-top: 4px"></div>
+                      <div>{{ occ.name }}</div>
+                      <div>{{ dayjs(occ.startTime).format('YYYY年MM月DD日') }}-{{ dayjs(occ.endTime).format('YYYY年MM月DD日') }}</div>
+                      <div>{{ occ.customerName || '-' }}</div>
+                    </template>
+                  </template>
+                  <ul class="calendar-events">
+                    <li v-for="occ in getOccupanciesForDate(current)" :key="occ.id + '-' + occ.type">
+                      <span :class="['calendar-event', occ.type === 'order' ? 'event-order' : 'event-reservation']"></span>
+                    </li>
+                  </ul>
+                </a-tooltip>
+              </div>
+            </template>
+          </a-calendar>
+          <a-button class="cal-nav-btn" size="large" @click="nextMonth">
+            <RightOutlined />
+          </a-button>
+        </div>
+      </a-spin>
+    </a-modal>
   </div>
 </template>
 
@@ -250,7 +402,7 @@ import { ref, computed, onMounted, onUnmounted, h } from 'vue';
 import { useRouter } from 'vue-router';
 import { Modal, message } from 'ant-design-vue';
 import type { UploadFile, UploadProps } from 'ant-design-vue';
-import { PlusOutlined } from '@ant-design/icons-vue';
+import { PlusOutlined, LeftOutlined, RightOutlined } from '@ant-design/icons-vue';
 import dayjs from 'dayjs';
 import request from '../utils/request';
 
@@ -263,13 +415,42 @@ const deviceModels = ref<any[]>([]);
 const filteredModels = ref<any[]>([]);
 const loading = ref(false);
 
+const pagination = ref({
+  current: 1,
+  pageSize: 10,
+  total: 0,
+  showSizeChanger: true,
+  pageSizeOptions: ['10', '20', '50', '100'],
+  showTotal: (total: number) => `共 ${total} 条`,
+});
+
+// ----- Calendar Modal -----
+const calendarVisible = ref(false);
+const calendarLoading = ref(false);
+const calendarAsset = ref<any>(null);
+const calendarOccupancies = ref<any[]>([]);
+const calendarDate = ref(dayjs());
+
+// ----- Tabs -----
+const activeTab = ref<'Camera' | 'Accessory'>('Camera');
+
+const cameraAssets = computed(() => assets.value.filter((a) => a.type === 'Camera'));
+const accessoryAssets = computed(() => assets.value.filter((a) => a.type === 'Accessory'));
+
+const onTabChange = () => {
+  pagination.value.current = 1;
+  fetchAssets();
+};
+
 // ----- 筛选 -----
-interface Filters {
-  brandModel: number[]; // [brandId] 或 [brandId, modelId]
-  rentalStatus?: 'Rented' | 'Available';
-  status?: 'Normal' | 'Damaged';
-}
-const filters = ref<Filters>({ brandModel: [] });
+const cameraFilters = ref({
+  brandModel: [] as number[],
+  status: undefined as 'Normal' | 'Damaged' | undefined,
+});
+
+const accessoryFilters = ref({
+  status: undefined as 'Normal' | 'Damaged' | undefined,
+});
 
 const cascaderOptions = computed(() => {
   return brands.value.map((b) => ({
@@ -282,19 +463,26 @@ const cascaderOptions = computed(() => {
 });
 
 const buildListParams = () => {
-  const p: Record<string, string | number> = {};
-  const [bId, mId] = filters.value.brandModel || [];
-  if (bId) p.brandId = bId;
-  if (mId) p.modelId = mId;
-  if (filters.value.rentalStatus) p.rentalStatus = filters.value.rentalStatus;
-  if (filters.value.status) p.status = filters.value.status;
+  const p: Record<string, string | number> = { type: activeTab.value };
+  if (activeTab.value === 'Camera') {
+    const [bId, mId] = cameraFilters.value.brandModel || [];
+    if (bId) p.brandId = bId;
+    if (mId) p.modelId = mId;
+    if (cameraFilters.value.status) p.status = cameraFilters.value.status;
+  } else {
+    if (accessoryFilters.value.status) p.status = accessoryFilters.value.status;
+  }
+  p.page = pagination.value.current;
+  p.pageSize = pagination.value.pageSize;
   return p;
 };
 
 const fetchAssets = async () => {
   loading.value = true;
   try {
-    assets.value = (await request.get('/asset', { params: buildListParams() })) as unknown as any[];
+    const res = (await request.get('/asset', { params: buildListParams() })) as { list: any[]; total: number };
+    assets.value = res.list;
+    pagination.value.total = res.total;
   } finally {
     loading.value = false;
   }
@@ -309,22 +497,59 @@ const fetchDicts = async () => {
   deviceModels.value = modelsData;
 };
 
-const onFilterChange = () => {
+const onCameraFilterChange = () => {
+  pagination.value.current = 1;
   fetchAssets();
 };
 
-const resetFilters = () => {
-  filters.value = { brandModel: [] };
+const onAccessoryFilterChange = () => {
+  pagination.value.current = 1;
   fetchAssets();
 };
 
-const columns = [
-  { title: 'ID', dataIndex: 'id', key: 'id', width: 70 },
-  { title: '图片', key: 'imageUrl', width: 80 },
+const resetCameraFilters = () => {
+  cameraFilters.value = { brandModel: [], status: undefined };
+  pagination.value.current = 1;
+  pagination.value.pageSize = 10;
+  fetchAssets();
+};
+
+const resetAccessoryFilters = () => {
+  accessoryFilters.value = { status: undefined };
+  pagination.value.current = 1;
+  pagination.value.pageSize = 10;
+  fetchAssets();
+};
+
+const handleTableChange = (pag: any) => {
+  pagination.value.current = pag.current;
+  pagination.value.pageSize = pag.pageSize;
+  fetchAssets();
+};
+
+const cameraColumns = [
   { title: '类型', key: 'type', width: 80 },
   { title: '品牌', key: 'brandName', width: 120 },
-  { title: '型号 / 名称', key: 'modelOrName', width: 140 },
+  { title: '型号', key: 'modelOrName', width: 140 },
+  { title: '图片', key: 'imageUrl', width: 80 },
   { title: 'SIN 码', key: 'sinCode', width: 140 },
+  { title: '购买金额', dataIndex: 'price', key: 'price', width: 100 },
+  {
+    title: '购买时间',
+    dataIndex: 'purchaseDate',
+    key: 'purchaseDate',
+    width: 120,
+    customRender: ({ text }: any) => (text ? dayjs(text).format('YYYY-MM-DD') : '-'),
+  },
+  { title: '租赁状态', key: 'rentalStatus', width: 100 },
+  { title: '设备状态', key: 'status', width: 90 },
+  { title: '操作', key: 'actions', width: 200, fixed: !isMobile.value ? ('right' as const) : undefined },
+];
+
+const accessoryColumns = [
+  { title: '类型', key: 'type', width: 80 },
+  { title: '配件名称', key: 'name', width: 180 },
+  { title: '图片', key: 'imageUrl', width: 80 },
   { title: '购买金额', dataIndex: 'price', key: 'price', width: 100 },
   {
     title: '购买时间',
@@ -375,7 +600,6 @@ interface AssetForm {
   price: number;
   status: 'Normal' | 'Damaged';
   damageDesc: string;
-  rentalStatus: 'Rented' | 'Available';
   remark: string;
 }
 
@@ -389,7 +613,6 @@ const blankForm = (): AssetForm => ({
   price: 0,
   status: 'Normal',
   damageDesc: '',
-  rentalStatus: 'Available',
   remark: '',
 });
 
@@ -400,7 +623,6 @@ const previewVisible = ref(false);
 const previewSrc = ref('');
 
 const onTypeChange = () => {
-  // 切换类型时清掉对方分支的字段，避免误带
   if (assetForm.value.type === 'Camera') {
     assetForm.value.name = '';
   } else {
@@ -434,7 +656,6 @@ const openEditAssetModal = (record: any) => {
     price: record.price,
     status: record.status,
     damageDesc: record.damageDesc || '',
-    rentalStatus: record.rentalStatus || 'Available',
     remark: record.remark || '',
   };
   filteredModels.value = record.brandId
@@ -532,7 +753,6 @@ const handleSubmitAsset = async () => {
       price: f.price,
       status: f.status,
       damageDesc: f.status === 'Damaged' ? f.damageDesc : null,
-      rentalStatus: f.rentalStatus,
       remark: f.remark || null,
     };
     if (f.type === 'Camera') {
@@ -611,6 +831,38 @@ const confirmDeleteAsset = (record: any) => {
     },
   });
 };
+
+const openCalendarModal = async (asset: any) => {
+  calendarAsset.value = asset;
+  calendarDate.value = dayjs();
+  calendarVisible.value = true;
+  calendarLoading.value = true;
+  try {
+    const data = (await request.get(`/asset/${asset.id}/occupancy`)) as any[];
+    calendarOccupancies.value = data;
+  } catch {
+    calendarOccupancies.value = [];
+  } finally {
+    calendarLoading.value = false;
+  }
+};
+
+const getOccupanciesForDate = (date: dayjs.Dayjs) => {
+  const d = date.startOf('day');
+  return calendarOccupancies.value.filter((occ) => {
+    const start = dayjs(occ.startTime).startOf('day');
+    const end = dayjs(occ.endTime).startOf('day');
+    return (d.isSame(start) || d.isAfter(start)) && (d.isSame(end) || d.isBefore(end));
+  });
+};
+
+const prevMonth = () => {
+  calendarDate.value = calendarDate.value.subtract(1, 'month');
+};
+
+const nextMonth = () => {
+  calendarDate.value = calendarDate.value.add(1, 'month');
+};
 </script>
 
 <style scoped>
@@ -620,5 +872,58 @@ const confirmDeleteAsset = (record: any) => {
   gap: 12px;
   margin-bottom: 16px;
   align-items: center;
+}
+
+.calendar-events {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+  display: flex;
+  flex-wrap: wrap;
+  gap: 4px;
+}
+
+.calendar-event {
+  display: inline-block;
+  width: 14px;
+  height: 14px;
+  border-radius: 50%;
+  cursor: pointer;
+}
+
+.event-order {
+  background-color: #ff4d4f;
+}
+
+.event-reservation {
+  background-color: #1890ff;
+}
+
+.calendar-wrapper {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+}
+
+.cal-nav-btn {
+  height: 64px;
+  font-size: 16px;
+  padding: 0 20px;
+  flex-shrink: 0;
+}
+
+.cal-body {
+  flex: 1;
+  min-width: 0;
+}
+
+@media (max-width: 768px) {
+  .calendar-wrapper {
+    flex-direction: column;
+  }
+  .cal-nav-btn {
+    width: 100%;
+    height: 48px;
+  }
 }
 </style>

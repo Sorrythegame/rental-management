@@ -4,14 +4,14 @@
       <a-button type="link" @click="goBack" style="padding-left: 0;">
         <LeftOutlined /> 返回列表
       </a-button>
-      <span style="margin-left: 8px;">{{ isEdit ? '编辑订单' : '新增订单' }}</span>
+      <span style="margin-left: 8px;">{{ isEdit ? '编辑预定' : '新增预定' }}</span>
     </template>
 
     <a-spin :spinning="loading">
       <a-form ref="formRef" :model="form" layout="vertical" :style="{ maxWidth: '720px' }">
-        <!-- 订单名称 -->
-        <a-form-item label="订单名称" name="name" :rules="[{ required: true, message: '请输入订单名称' }]">
-          <a-input v-model:value="form.name" placeholder="请输入订单名称" />
+        <!-- 预定名称 -->
+        <a-form-item label="预定名称" name="name" :rules="[{ required: true, message: '请输入预定名称' }]">
+          <a-input v-model:value="form.name" placeholder="请输入预定名称" />
         </a-form-item>
 
         <!-- SIN 码：可搜索下拉，选中后带出品牌型号与图片 -->
@@ -53,52 +53,30 @@
           </div>
         </a-form-item>
 
-        <!-- 配件：多选下拉框 -->
-        <a-form-item label="配件" name="accessoryIds">
-          <a-select
-            v-model:value="form.accessoryIds"
-            mode="multiple"
-            placeholder="选择关联配件"
-            :options="availableAccessoryOptions"
-            :disabled="accessoryLoading"
-            allow-clear
-          />
-        </a-form-item>
-
-        <!-- 已选配件图片预览 -->
-        <a-form-item v-if="selectedAccessoryImages.length" label="配件图片">
-          <div style="display: flex; flex-wrap: wrap; gap: 8px;">
-            <div v-for="acc in selectedAccessoryImages" :key="acc.id" style="text-align: center;">
-              <a-image
-                v-if="acc.imageUrl"
-                :src="acc.imageUrl"
-                :width="80"
-                :height="80"
-                style="object-fit: cover;"
-              />
-              <div style="font-size: 12px; color: #666; margin-top: 4px;">{{ acc.name }}</div>
-            </div>
-          </div>
-        </a-form-item>
-
+        <!-- 租赁日期 -->
         <a-form-item label="租赁日期" name="dateRange" :rules="[{ required: true, message: '请选择租赁日期' }]">
           <a-range-picker v-model:value="form.dateRange" style="width: 100%" :disabled-date="disabledDate" />
         </a-form-item>
 
         <a-row :gutter="16">
           <a-col :span="12">
-            <a-form-item label="订单金额" name="amount" :rules="[{ required: true, message: '请输入金额' }]">
+            <a-form-item label="预计金额" name="amount" :rules="[{ required: true, message: '请输入金额' }]">
               <a-input-number v-model:value="form.amount" :min="0" style="width: 100%" />
             </a-form-item>
           </a-col>
           <a-col :span="12">
-            <a-form-item label="客户名" name="customerName">
-              <a-input v-model:value="form.customerName" placeholder="客户网名/姓名" />
+            <a-form-item label="押金" name="deposit">
+              <a-input-number v-model:value="form.deposit" :min="0" style="width: 100%" />
             </a-form-item>
           </a-col>
         </a-row>
 
         <a-row :gutter="16">
+          <a-col :span="12">
+            <a-form-item label="客户名" name="customerName">
+              <a-input v-model:value="form.customerName" placeholder="客户网名/姓名" />
+            </a-form-item>
+          </a-col>
           <a-col :span="12">
             <a-form-item label="客户电话" name="customerPhone">
               <a-input v-model:value="form.customerPhone" placeholder="联系电话" />
@@ -132,9 +110,8 @@ import request from '../utils/request';
 const route = useRoute();
 const router = useRouter();
 
-const isEdit = ref(route.name === 'OrderEdit');
-const orderId = ref<number | null>(isEdit.value ? Number(route.params.id) : null);
-const assetIdFromQuery = ref<string | undefined>(route.query.assetId as string | undefined);
+const isEdit = ref(route.name === 'ReservationEdit');
+const reservationId = ref<number | null>(isEdit.value ? Number(route.params.id) : null);
 const loading = ref(false);
 const submitting = ref(false);
 const formRef = ref();
@@ -142,36 +119,34 @@ const formRef = ref();
 const brands = ref<any[]>([]);
 const deviceModels = ref<any[]>([]);
 const cameraAssets = ref<any[]>([]);
-const allAccessories = ref<any[]>([]);
-const accessoryLoading = ref(false);
 
-interface OrderForm {
+interface ReservationForm {
   name: string;
   assetId: number | null;
   sinCode: string;
-  brandModel: number[]; // [brandId, modelId]
-  accessoryIds: number[];
+  brandModel: number[];
   dateRange: [dayjs.Dayjs | null, dayjs.Dayjs | null] | null;
   amount: number;
+  deposit: number | null;
   customerName: string;
   customerPhone: string;
   remarks: string;
 }
 
-const blankForm = (): OrderForm => ({
+const blankForm = (): ReservationForm => ({
   name: '',
   assetId: null,
   sinCode: '',
   brandModel: [],
-  accessoryIds: [],
   dateRange: null,
   amount: 0,
+  deposit: null,
   customerName: '',
   customerPhone: '',
   remarks: '',
 });
 
-const form = ref<OrderForm>(blankForm());
+const form = ref<ReservationForm>(blankForm());
 const deviceImages = ref<string[]>([]);
 const occupiedRanges = ref<{ startTime: string; endTime: string }[]>([]);
 
@@ -192,8 +167,8 @@ const fetchOccupancy = async (assetId: number) => {
   }
   try {
     const params: Record<string, string> = {};
-    if (isEdit.value && orderId.value) {
-      params.excludeOrderId = String(orderId.value);
+    if (isEdit.value && reservationId.value) {
+      params.excludeReservationId = String(reservationId.value);
     }
     occupiedRanges.value = (await request.get(`/asset/${assetId}/occupancy`, { params })) as unknown as { startTime: string; endTime: string }[];
   } catch {
@@ -227,7 +202,7 @@ const validateBrandModel = () => {
   return form.value.brandModel.length === 2 ? Promise.resolve() : Promise.reject(new Error('请通过 SIN 码选择设备'));
 };
 
-const goBack = () => router.push({ name: 'Orders' });
+const goBack = () => router.push({ name: 'Reservations' });
 
 const fetchDicts = async () => {
   const [brandsData, modelsData] = (await Promise.all([
@@ -240,15 +215,6 @@ const fetchDicts = async () => {
 
 const fetchCameraAssets = async () => {
   cameraAssets.value = (await request.get('/asset', { params: { type: 'Camera' } })) as unknown as any[];
-};
-
-const fetchAccessories = async () => {
-  accessoryLoading.value = true;
-  try {
-    allAccessories.value = (await request.get('/asset', { params: { type: 'Accessory' } })) as unknown as any[];
-  } finally {
-    accessoryLoading.value = false;
-  }
 };
 
 const applyAssetToForm = (asset: any) => {
@@ -276,69 +242,33 @@ const onSinChange = (value: string) => {
   }
 };
 
-// 已被其他非 Completed 订单占用的配件 IDs（排除当前订单）
-const occupiedAccessoryIds = computed(() => {
-  const occupied = new Set<number>();
-  const currentIds = new Set(form.value.accessoryIds.map((id) => Number(id)));
-  allAccessories.value.forEach((acc) => {
-    if (acc.rentalStatus === 'Rented') {
-      if (!currentIds.has(acc.id)) {
-        occupied.add(acc.id);
-      }
-    }
-  });
-  return occupied;
-});
-
-const availableAccessoryOptions = computed(() => {
-  return allAccessories.value
-    .filter((a) => !occupiedAccessoryIds.value.has(a.id))
-    .map((a) => ({
-      label: a.name || `ID:${a.id}`,
-      value: a.id,
-      asset: a,
-    }));
-});
-
-const selectedAccessoryImages = computed(() => {
-  return form.value.accessoryIds
-    .map((id) => Number(id))
-    .map((id) => allAccessories.value.find((a) => a.id === id))
-    .filter(Boolean)
-    .map((a) => ({
-      id: a.id,
-      name: a.name || `ID:${a.id}`,
-      imageUrl: Array.isArray(a.imageUrls) && a.imageUrls.length ? a.imageUrls[0] : '',
-    }));
-});
-
-const loadOrder = async (id: number) => {
+const loadReservation = async (id: number) => {
   loading.value = true;
   try {
-    const order = await request.get(`/rental-order/${id}`) as any;
-    let asset = order.asset;
-    if (!asset && order.assetId) {
+    const reservation = await request.get(`/reservation/${id}`) as any;
+    let asset = reservation.asset;
+    if (!asset && reservation.assetId) {
       try {
-        asset = await request.get(`/asset/${order.assetId}`);
+        asset = await request.get(`/asset/${reservation.assetId}`);
       } catch {
         // ignore
       }
     }
-    if (!asset && order.sinCode) {
-      asset = cameraAssets.value.find((a) => a.sinCode === order.sinCode);
+    if (!asset && reservation.sinCode) {
+      asset = cameraAssets.value.find((a) => a.sinCode === reservation.sinCode);
     }
 
     form.value = {
-      name: order.name || '',
-      assetId: order.assetId ?? null,
-      sinCode: order.sinCode || '',
+      name: reservation.name || '',
+      assetId: reservation.assetId ?? null,
+      sinCode: reservation.sinCode || '',
       brandModel: [],
-      accessoryIds: (order.accessories || []).map((acc: any) => Number(acc.assetId)).filter((id: number) => !isNaN(id)),
-      dateRange: order.startTime && order.endTime ? [dayjs(order.startTime), dayjs(order.endTime)] : null,
-      amount: order.amount ?? 0,
-      customerName: order.customerName || '',
-      customerPhone: order.customerPhone || '',
-      remarks: order.remarks || '',
+      dateRange: reservation.startTime && reservation.endTime ? [dayjs(reservation.startTime), dayjs(reservation.endTime)] : null,
+      amount: reservation.amount ?? 0,
+      deposit: reservation.deposit ?? null,
+      customerName: reservation.customerName || '',
+      customerPhone: reservation.customerPhone || '',
+      remarks: reservation.remarks || '',
     };
 
     if (asset) {
@@ -349,7 +279,7 @@ const loadOrder = async (id: number) => {
       occupiedRanges.value = [];
     }
   } catch {
-    message.error('订单加载失败');
+    message.error('预定加载失败');
   } finally {
     loading.value = false;
   }
@@ -374,22 +304,22 @@ const handleSubmit = async () => {
       sinCode: form.value.sinCode,
       brandName: brand?.name || '',
       modelName: model?.name || '',
-      accessoryIds: form.value.accessoryIds.map((id) => Number(id)).filter((id) => !isNaN(id)),
       startTime: form.value.dateRange?.[0]?.startOf('day').toISOString(),
       endTime: form.value.dateRange?.[1]?.endOf('day').toISOString(),
       amount: form.value.amount,
+      deposit: form.value.deposit,
       customerName: form.value.customerName,
       customerPhone: form.value.customerPhone,
       remarks: form.value.remarks,
     };
-    if (isEdit.value && orderId.value) {
-      await request.put(`/rental-order/${orderId.value}`, payload);
-      message.success('订单已更新');
+    if (isEdit.value && reservationId.value) {
+      await request.put(`/reservation/${reservationId.value}`, payload);
+      message.success('预定已更新');
     } else {
-      await request.post('/rental-order', payload);
-      message.success('订单已新增');
+      await request.post('/reservation', payload);
+      message.success('预定已新增');
     }
-    router.push({ name: 'Orders' });
+    router.push({ name: 'Reservations' });
   } catch {
     // 拦截器已提示
   } finally {
@@ -400,20 +330,8 @@ const handleSubmit = async () => {
 onMounted(async () => {
   await fetchDicts();
   await fetchCameraAssets();
-  await fetchAccessories();
-  if (isEdit.value && orderId.value) {
-    await loadOrder(orderId.value);
-  } else if (assetIdFromQuery.value) {
-    const id = Number(assetIdFromQuery.value);
-    if (id) {
-      try {
-        const asset = await request.get(`/asset/${id}`) as any;
-        applyAssetToForm(asset);
-        await fetchOccupancy(id);
-      } catch {
-        message.error('关联设备信息加载失败');
-      }
-    }
+  if (isEdit.value && reservationId.value) {
+    await loadReservation(reservationId.value);
   }
 });
 </script>

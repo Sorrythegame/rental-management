@@ -13,11 +13,12 @@
       <template v-else-if="order">
         <a-descriptions :column="isMobile ? 1 : 2" bordered size="small">
           <a-descriptions-item label="订单 ID">{{ order.id }}</a-descriptions-item>
+          <a-descriptions-item label="订单名称">{{ order.name || '-' }}</a-descriptions-item>
           <a-descriptions-item label="SIN 码">{{ order.sinCode || '-' }}</a-descriptions-item>
           <a-descriptions-item label="品牌">{{ order.brandName || '-' }}</a-descriptions-item>
           <a-descriptions-item label="型号 / 名称">{{ order.modelName || '-' }}</a-descriptions-item>
           <a-descriptions-item label="订单状态">
-            <a-tag :color="statusColor(computeOrderStatus(order.startTime, order.endTime))">{{ statusText(computeOrderStatus(order.startTime, order.endTime)) }}</a-tag>
+            <a-tag :color="statusColor(computeOrderStatus(order))">{{ statusText(computeOrderStatus(order)) }}</a-tag>
           </a-descriptions-item>
           <a-descriptions-item label="订单金额">¥{{ order.amount }}</a-descriptions-item>
           <a-descriptions-item label="租赁开始时间">
@@ -50,7 +51,7 @@
             </a-tag>
           </a-descriptions-item>
           <a-descriptions-item label="租赁状态">
-            <a-tag :color="order.asset.rentalStatus === 'Rented' ? 'orange' : 'default'">
+            <a-tag :color="order.asset.rentalStatus === 'Rented' ? 'green' : 'default'">
               {{ order.asset.rentalStatus === 'Rented' ? '出租中' : '未出租' }}
             </a-tag>
           </a-descriptions-item>
@@ -69,6 +70,31 @@
             </a-image-preview-group>
           </a-descriptions-item>
         </a-descriptions>
+
+        <template v-if="order.accessories?.length">
+          <a-divider />
+          <h4>关联配件</h4>
+          <a-descriptions v-for="acc in order.accessories" :key="acc.id" :column="isMobile ? 1 : 2" bordered size="small" style="margin-bottom: 16px;">
+            <a-descriptions-item label="配件名称">{{ acc.asset?.name || `ID:${acc.assetId}` }}</a-descriptions-item>
+            <a-descriptions-item label="设备状态">
+              <a-tag :color="acc.asset?.status === 'Normal' ? 'green' : 'red'">
+                {{ acc.asset?.status === 'Normal' ? '正常' : '损坏' }}
+              </a-tag>
+            </a-descriptions-item>
+            <a-descriptions-item v-if="acc.asset?.imageUrls?.length" label="配件图片" :span="2">
+              <a-image-preview-group>
+                <a-image
+                  v-for="url in acc.asset.imageUrls.filter((s: any) => typeof s === 'string' && s)"
+                  :key="url"
+                  :src="url"
+                  :width="100"
+                  :height="100"
+                  style="object-fit: cover; margin-right: 8px; margin-bottom: 8px;"
+                />
+              </a-image-preview-group>
+            </a-descriptions-item>
+          </a-descriptions>
+        </template>
       </template>
     </a-spin>
   </a-card>
@@ -94,22 +120,23 @@ const assetImageUrls = computed(() => {
   return [];
 });
 
-const computeOrderStatus = (startTime: string, endTime: string): 'NotStarted' | 'InProgress' | 'Completed' => {
+const computeOrderStatus = (record: any): 'NotStarted' | 'InProgress' | 'Completed' | 'ManuallyStopped' => {
+  if (record.orderStatus === 'ManuallyStopped') return 'ManuallyStopped';
   const now = Date.now();
-  const start = new Date(startTime).getTime();
-  const end = new Date(endTime).getTime();
+  const start = new Date(record.startTime).getTime();
+  const end = new Date(record.endTime).getTime();
   if (now < start) return 'NotStarted';
   if (now > end) return 'Completed';
   return 'InProgress';
 };
 
 const statusText = (s: string) => {
-  const map: Record<string, string> = { NotStarted: '未开始', InProgress: '进行中', Completed: '已完成' };
+  const map: Record<string, string> = { NotStarted: '未开始', InProgress: '进行中', Completed: '已完成', ManuallyStopped: '手动停止' };
   return map[s] || s;
 };
 
 const statusColor = (s: string) => {
-  const map: Record<string, string> = { NotStarted: 'default', InProgress: 'blue', Completed: 'green' };
+  const map: Record<string, string> = { NotStarted: 'default', InProgress: 'green', Completed: 'green', ManuallyStopped: 'red' };
   return map[s] || 'default';
 };
 

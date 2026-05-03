@@ -6,22 +6,27 @@
       </template>
 
       <a-row :gutter="[16, 16]">
-        <a-col :xs="24" :sm="12" :md="6">
+        <a-col :xs="24" :sm="12" :md="4">
           <a-card>
             <a-statistic title="总营业额 (元)" :value="summaryData.metrics.totalRevenue" :precision="2" />
           </a-card>
         </a-col>
-        <a-col :xs="24" :sm="12" :md="6">
+        <a-col :xs="24" :sm="12" :md="4">
           <a-card>
             <a-statistic title="总订单数" :value="summaryData.metrics.totalOrders" />
           </a-card>
         </a-col>
-        <a-col :xs="24" :sm="12" :md="6">
+        <a-col :xs="24" :sm="12" :md="4">
+          <a-card>
+            <a-statistic title="资产总和 (元)" :value="summaryData.metrics.totalAssetValue" :precision="2" />
+          </a-card>
+        </a-col>
+        <a-col :xs="24" :sm="12" :md="4">
           <a-card>
             <a-statistic title="损坏资产预警" :value="summaryData.warnings.damagedAssetsCount" value-style="color: #cf1322" />
           </a-card>
         </a-col>
-        <a-col :xs="24" :sm="12" :md="6">
+        <a-col :xs="24" :sm="12" :md="4">
           <a-card>
             <a-statistic title="逾期未归还订单" :value="summaryData.warnings.overdueOrdersCount" value-style="color: #cf1322" />
           </a-card>
@@ -81,7 +86,7 @@ use([
 const dateRange = ref<[dayjs.Dayjs, dayjs.Dayjs] | null>(null);
 
 const summaryData = ref({
-  metrics: { totalOrders: 0, totalRevenue: 0 },
+  metrics: { totalOrders: 0, totalRevenue: 0, totalAssetValue: 0 },
   warnings: { damagedAssetsCount: 0, overdueOrdersCount: 0 },
   charts: {
     orderTrend: [] as { date: string, count: number }[],

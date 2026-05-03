@@ -52,6 +52,28 @@ const router = createRouter({
           component: () => import('../views/OrderDetail.vue'),
         },
         {
+          path: 'reservations',
+          name: 'Reservations',
+          component: () => import('../views/Reservations.vue'),
+        },
+        {
+          path: 'reservations/add',
+          name: 'ReservationAdd',
+          component: () => import('../views/ReservationForm.vue'),
+          meta: { mode: 'add' },
+        },
+        {
+          path: 'reservations/edit/:id',
+          name: 'ReservationEdit',
+          component: () => import('../views/ReservationForm.vue'),
+          meta: { mode: 'edit' },
+        },
+        {
+          path: 'reservations/detail/:id',
+          name: 'ReservationDetail',
+          component: () => import('../views/ReservationDetail.vue'),
+        },
+        {
           path: 'system',
           name: 'System',
           component: () => import('../views/System/index.vue'),

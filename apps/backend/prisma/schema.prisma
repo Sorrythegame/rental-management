@@ -66,29 +66,89 @@ model Asset {
   status       AssetStatus                                 // 设备状态
   damageDesc   String?                                     // 损坏描述
   rentalStatus RentalStatus @default(Available)            // 出租状态
-  remark       String?                                     // 备注
-  orders       RentalOrder[]                               // 关联订单
+  remark                String?                                     // 备注
+  orders                RentalOrder[]                               // 关联订单（相机）
+  orderAccessories      RentalOrderAccessory[]                      // 关联订单（配件）
+  reservations          Reservation[]                               // 关联预定（相机）
+  reservationAccessories ReservationAccessory[]                     // 关联预定（配件）
 }
 
 enum OrderStatus {
-  NotStarted  // 未开始
-  InProgress  // 进行中
-  Completed   // 已完成
+  NotStarted      // 未开始
+  InProgress      // 进行中
+  Completed       // 已完成
+  ManuallyStopped // 手动停止
+}
+
+enum ReservationStatus {
+  Pending    // 待确认
+  Confirmed  // 已确认
+  Cancelled  // 已取消
+  Converted  // 已转单
 }
 
 // 租赁订单表
 model RentalOrder {
-  id               Int         @id @default(autoincrement()) // 自增 ID
-  assetId          Int?                                      // 关联资产 ID
-  asset            Asset?      @relation(fields: [assetId], references: [id])
-  sinCode          String?   @map("snCode")                      // 设备 SIN 码
-  brandName        String?                                   // 设备品牌（快照）
-  modelName        String?                                   // 设备型号/名称（快照）
-  startTime        DateTime                                  // 租赁开始时间
-  endTime          DateTime                                  // 租赁结束时间
-  orderStatus      OrderStatus @default(NotStarted)          // 订单状态
-  amount           Float                                     // 订单金额
-  customerName     String?                                   // 客户名
-  customerPhone    String?                                   // 客户电话
-  remarks          String?                                   // 备注
+  id               Int                    @id @default(autoincrement()) // 自增 ID
+  assetId          Int?                                            // 关联资产 ID（相机）
+  asset            Asset?                 @relation(fields: [assetId], references: [id])
+  sinCode          String?                @map("snCode")            // 设备 SIN 码
+  brandName        String?                                         // 设备品牌（快照）
+  modelName        String?                                         // 设备型号/名称（快照）
+  name             String?                                         // 订单名称
+  startTime        DateTime                                        // 租赁开始时间
+  endTime          DateTime                                        // 租赁结束时间
+  orderStatus      OrderStatus            @default(NotStarted)     // 订单状态
+  amount           Float                                           // 订单金额
+  customerName     String?                                         // 客户名
+  customerPhone    String?                                         // 客户电话
+  remarks          String?                                         // 备注
+  accessories      RentalOrderAccessory[]                          // 关联配件
+  reservations     Reservation[]                                   // 由预定转来的订单
+}
+
+// 订单配件关联表
+model RentalOrderAccessory {
+  id            Int         @id @default(autoincrement())
+  rentalOrderId Int
+  assetId       Int
+  rentalOrder   RentalOrder @relation(fields: [rentalOrderId], references: [id], onDelete: Cascade)
+  asset         Asset       @relation(fields: [assetId], references: [id], onDelete: Cascade)
+
+  @@unique([rentalOrderId, assetId])
+}
+
+// 预定表
+model Reservation {
+  id            Int                    @id @default(autoincrement())
+  assetId       Int?                                            // 关联资产 ID（相机）
+  asset         Asset?                 @relation(fields: [assetId], references: [id])
+  sinCode       String?                @map("snCode")            // 设备 SIN 码
+  brandName     String?                                         // 设备品牌（快照）
+  modelName     String?                                         // 设备型号/名称（快照）
+  name          String?                                         // 预定名称
+  startTime     DateTime                                        // 预定开始时间
+  endTime       DateTime                                        // 预定结束时间
+  status        ReservationStatus      @default(Pending)         // 预定状态
+  amount        Float                                           // 预计金额
+  deposit       Float?                                          // 押金
+  customerName  String?                                         // 客户名
+  customerPhone String?                                         // 客户电话
+  remarks       String?                                         // 备注
+  rentalOrderId Int?                                            // 转单后关联的正式订单
+  rentalOrder   RentalOrder?           @relation(fields: [rentalOrderId], references: [id])
+  accessories   ReservationAccessory[]                          // 关联配件
+  createdAt     DateTime               @default(now())
+  updatedAt     DateTime               @updatedAt
+}
+
+// 预定配件关联表
+model ReservationAccessory {
+  id            Int         @id @default(autoincrement())
+  reservationId Int
+  assetId       Int
+  reservation   Reservation @relation(fields: [reservationId], references: [id], onDelete: Cascade)
+  asset         Asset       @relation(fields: [assetId], references: [id], onDelete: Cascade)
+
+  @@unique([reservationId, assetId])
 }

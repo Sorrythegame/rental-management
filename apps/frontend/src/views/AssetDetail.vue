@@ -35,7 +35,7 @@
           </a-tag>
         </a-descriptions-item>
         <a-descriptions-item label="租赁状态">
-          <a-tag :color="asset.rentalStatus === 'Rented' ? 'orange' : 'default'">
+          <a-tag :color="asset.rentalStatus === 'Rented' ? 'green' : 'default'">
             {{ asset.rentalStatus === 'Rented' ? '出租中' : '未出租' }}
           </a-tag>
         </a-descriptions-item>

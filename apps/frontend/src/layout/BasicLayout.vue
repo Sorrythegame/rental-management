@@ -1,5 +1,5 @@
 <template>
-  <a-layout style="min-height: 100vh">
+  <a-layout class="layout-root">
     <!-- Desktop Sidebar -->
     <a-layout-sider v-if="!isMobile" v-model:collapsed="collapsed" collapsible>
       <div class="logo">相机租赁系统</div>
@@ -18,14 +18,17 @@
         <a-menu-item key="Orders">
           <span>订单管理</span>
         </a-menu-item>
+        <a-menu-item key="Reservations">
+          <span>预定管理</span>
+        </a-menu-item>
         <a-menu-item key="System">
           <span>系统管理</span>
         </a-menu-item>
       </a-menu>
     </a-layout-sider>
 
-    <a-layout>
-      <a-layout-header style="background: #fff; padding: 0 16px; display: flex; align-items: center; justify-content: space-between;">
+    <a-layout class="layout-right">
+      <a-layout-header style="background: #fff; padding: 0 16px; display: flex; align-items: center; justify-content: space-between; flex-shrink: 0;">
         <div v-if="isMobile">
           <a-button type="text" @click="drawerVisible = true" style="margin-right: 16px;">
             <MenuOutlined />
@@ -40,8 +43,8 @@
         </div>
       </a-layout-header>
 
-      <a-layout-content style="margin: 16px">
-        <div style="padding: 24px; background: #fff; min-height: 360px">
+      <a-layout-content class="layout-content">
+        <div style="padding: 24px; background: #fff;">
           <router-view />
         </div>
       </a-layout-content>
@@ -62,6 +65,7 @@
         <a-menu-item key="Dashboard">数据看板</a-menu-item>
         <a-menu-item key="Assets">资产管理</a-menu-item>
         <a-menu-item key="Orders">订单管理</a-menu-item>
+        <a-menu-item key="Reservations">预定管理</a-menu-item>
         <a-menu-item key="System">系统管理</a-menu-item>
       </a-menu>
     </a-drawer>
@@ -130,5 +134,23 @@ const handleLogout = async () => {
   line-height: 32px;
   overflow: hidden;
   white-space: nowrap;
+}
+
+.layout-root {
+  height: 100vh;
+  overflow: hidden;
+}
+
+.layout-right {
+  display: flex;
+  flex-direction: column;
+  height: 100vh;
+  overflow: hidden;
+}
+
+.layout-content {
+  flex: 1;
+  overflow-y: auto;
+  margin: 16px;
 }
 </style>
