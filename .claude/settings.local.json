@@ -57,7 +57,9 @@
       "Bash(npm run *)",
       "Bash(cmd *)",
       "Bash(cd /d D:\\\\project\\\\rental-management\\\\apps\\\\frontend)",
-      "Bash(npx vue-tsc *)"
+      "Bash(npx vue-tsc *)",
+      "Bash(ssh *)",
+      "Bash(sshpass -V)"
     ]
   }
 }

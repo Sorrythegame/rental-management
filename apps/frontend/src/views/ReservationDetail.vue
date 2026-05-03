@@ -233,9 +233,9 @@ const handleConvert = async () => {
   if (!reservation.value) return;
   convertModalLoading.value = true;
   try {
-    const order = await request.put(`/reservation/${reservation.value.id}/convert`, {
+    const order = (await request.put(`/reservation/${reservation.value.id}/convert`, {
       accessoryIds: convertAccessoryIds.value,
-    });
+    })) as any;
     message.success('已转单，订单 ID：' + order.id);
     convertModalVisible.value = false;
     await fetchReservation();
