@@ -13,18 +13,15 @@
           class="stats-card"
         >
           <div class="stats-card-header">
-            <span class="stats-brand">{{ stat.brandName }}</span>
-            <span class="stats-model">{{ stat.modelName }}</span>
+            <span class="stats-brand">{{ stat.brandName }}-{{ stat.modelName }}</span>
           </div>
           <div class="stats-card-body">
             <div class="stats-item">
-              <div class="stats-label">资产个数</div>
-              <div class="stats-value">{{ stat.count }}</div>
+              <div class="stats-value">{{ stat.count }}个</div>
             </div>
             <div class="stats-divider" />
             <div class="stats-item">
-              <div class="stats-label">金额总计</div>
-              <div class="stats-value stats-price">¥{{ stat.totalPrice.toLocaleString() }}</div>
+              <div class="stats-value stats-price">￥{{ stat.totalPrice.toLocaleString() }}</div>
             </div>
           </div>
         </div>
@@ -911,16 +908,16 @@ const nextMonth = () => {
 .stats-card-wrapper {
   display: flex;
   flex-wrap: wrap;
-  gap: 12px;
-  margin-bottom: 20px;
+  gap: 10px;
+  margin-bottom: 16px;
 }
 
 .stats-card {
-  flex: 1 1 200px;
-  max-width: 280px;
+  flex: 1 1 160px;
+  max-width: 220px;
   background: #fff;
-  border-radius: 12px;
-  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.06);
+  border-radius: 10px;
+  box-shadow: 0 1px 4px rgba(0, 0, 0, 0.06);
   overflow: hidden;
   transition: transform 0.2s ease, box-shadow 0.2s ease;
   cursor: default;
@@ -928,41 +925,33 @@ const nextMonth = () => {
 
 .stats-card:hover {
   transform: translateY(-2px);
-  box-shadow: 0 6px 16px rgba(0, 0, 0, 0.1);
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
 }
 
 .stats-card::before {
   content: '';
   display: block;
-  height: 4px;
+  height: 3px;
   background: linear-gradient(90deg, #1890ff, #36cfc9);
 }
 
 .stats-card-header {
-  padding: 14px 16px 10px;
+  padding: 8px 12px 6px;
   text-align: center;
   border-bottom: 1px solid #f0f0f0;
 }
 
 .stats-brand {
-  display: block;
-  font-size: 16px;
+  font-size: 14px;
   font-weight: 600;
   color: #262626;
-  line-height: 1.4;
-}
-
-.stats-model {
-  display: block;
-  font-size: 13px;
-  color: #8c8c8c;
-  margin-top: 2px;
+  line-height: 1.3;
 }
 
 .stats-card-body {
   display: flex;
   align-items: center;
-  padding: 12px 16px;
+  padding: 8px 12px;
 }
 
 .stats-item {
@@ -970,17 +959,11 @@ const nextMonth = () => {
   text-align: center;
 }
 
-.stats-label {
-  font-size: 12px;
-  color: #8c8c8c;
-  margin-bottom: 4px;
-}
-
 .stats-value {
-  font-size: 18px;
-  font-weight: 700;
+  font-size: 15px;
+  font-weight: 600;
   color: #262626;
-  line-height: 1.3;
+  line-height: 1.2;
 }
 
 .stats-price {
