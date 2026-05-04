@@ -59,7 +59,13 @@
       "Bash(cd /d D:\\\\project\\\\rental-management\\\\apps\\\\frontend)",
       "Bash(npx vue-tsc *)",
       "Bash(ssh *)",
-      "Bash(sshpass -V)"
+      "Bash(sshpass -V)",
+      "Bash(tar -czf /tmp/rental-update.tar.gz --exclude=node_modules --exclude=.git --exclude='*.tar.gz' nginx/)",
+      "Bash(DISPLAY=:0 SSH_ASKPASS=/tmp/ssh_askpass.sh scp -o StrictHostKeyChecking=no -o BatchMode=no -o PreferredAuthentications=password /tmp/rental-update.tar.gz root@111.228.33.56:/opt/rental-management/)",
+      "Bash(DISPLAY=:0 SSH_ASKPASS=/tmp/ssh_askpass.sh ssh -T -o StrictHostKeyChecking=no -o BatchMode=no -o PreferredAuthentications=password root@111.228.33.56 \"cd /opt/rental-management && tar -xzf rental-update.tar.gz && docker compose exec nginx nginx -s reload && echo '---RELOAD_OK---'\")",
+      "Bash(DISPLAY=:0 SSH_ASKPASS=/tmp/ssh_askpass.sh scp *)",
+      "Bash(DISPLAY=:0 SSH_ASKPASS=/tmp/ssh_askpass.sh ssh *)",
+      "Bash(/c/Windows/System32/OpenSSH/ssh.exe -o StrictHostKeyChecking=no -o UserKnownHostsFile=/dev/null -o PreferredAuthentications=password -o PubkeyAuthentication=no -o GSSAPIAuthentication=no root@111.228.33.56 \"whoami\")"
     ]
   }
 }

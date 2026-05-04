@@ -4,7 +4,11 @@
   "description": "相机租赁管理系统 Monorepo",
   "private": true,
   "scripts": {
-    "dev": "concurrently \"pnpm --filter backend start:dev\" \"pnpm --filter frontend dev\"",
+    "dev:db": "docker compose -f docker-compose.dev.yml up -d --wait",
+    "dev:db:down": "docker compose -f docker-compose.dev.yml down",
+    "dev:migrate": "pnpm --filter backend exec prisma migrate deploy",
+    "dev:run": "concurrently \"pnpm --filter backend start:dev\" \"pnpm --filter frontend dev\"",
+    "dev": "pnpm dev:db && pnpm dev:migrate && pnpm dev:run",
     "build": "pnpm --filter backend build && pnpm --filter frontend build"
   },
   "dependencies": {

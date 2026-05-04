@@ -6,7 +6,7 @@
       </template>
 
       <!-- 品牌型号统计卡片 -->
-      <div v-if="brandModelStats.length" class="stats-card-wrapper">
+      <div v-if="brandModelStats.length || accessorySummary.count" class="stats-card-wrapper">
         <div
           v-for="stat in brandModelStats"
           :key="stat.brandName + '-' + stat.modelName"
@@ -22,6 +22,20 @@
             <div class="stats-divider" />
             <div class="stats-item">
               <div class="stats-value stats-price">￥{{ stat.totalPrice.toLocaleString() }}</div>
+            </div>
+          </div>
+        </div>
+        <div v-if="accessorySummary.count" class="stats-card stats-card-accessory">
+          <div class="stats-card-header">
+            <span class="stats-brand">配件</span>
+          </div>
+          <div class="stats-card-body">
+            <div class="stats-item">
+              <div class="stats-value">{{ accessorySummary.count }}个</div>
+            </div>
+            <div class="stats-divider" />
+            <div class="stats-item">
+              <div class="stats-value stats-price">￥{{ accessorySummary.totalPrice.toLocaleString() }}</div>
             </div>
           </div>
         </div>
@@ -165,6 +179,14 @@
         <a-tab-pane key="Accessory" tab="配件">
           <!-- 配件筛选区 -->
           <div class="filter-bar">
+            <a-input
+              v-model:value="accessoryFilters.name"
+              placeholder="配件名称"
+              allow-clear
+              :style="{ width: '200px' }"
+              @change="onAccessoryFilterChange"
+              @press-enter="onAccessoryFilterChange"
+            />
             <a-select
               v-model:value="accessoryFilters.status"
               placeholder="设备状态"
@@ -445,12 +467,30 @@ interface BrandModelStat {
 }
 const brandModelStats = ref<BrandModelStat[]>([]);
 
+interface AccessorySummary {
+  count: number;
+  totalPrice: number;
+}
+const accessorySummary = ref<AccessorySummary>({ count: 0, totalPrice: 0 });
+
 const fetchBrandModelStats = async () => {
   try {
     const res = await request.get('/asset/stats/by-brand-model') as BrandModelStat[];
     brandModelStats.value = res;
   } catch {
     brandModelStats.value = [];
+  }
+};
+
+const fetchAccessorySummary = async () => {
+  try {
+    const res = await request.get('/asset/stats/accessory-summary') as AccessorySummary;
+    accessorySummary.value = {
+      count: Number(res.count) || 0,
+      totalPrice: Number(res.totalPrice) || 0,
+    };
+  } catch {
+    accessorySummary.value = { count: 0, totalPrice: 0 };
   }
 };
 
@@ -488,6 +528,7 @@ const cameraFilters = ref({
 });
 
 const accessoryFilters = ref({
+  name: '',
   status: undefined as 'Normal' | 'Damaged' | undefined,
 });
 
@@ -510,6 +551,7 @@ const buildListParams = () => {
     if (cameraFilters.value.status) p.status = cameraFilters.value.status;
   } else {
     if (accessoryFilters.value.status) p.status = accessoryFilters.value.status;
+    if (accessoryFilters.value.name?.trim()) p.name = accessoryFilters.value.name.trim();
   }
   p.page = pagination.value.current;
   p.pageSize = pagination.value.pageSize;
@@ -554,7 +596,7 @@ const resetCameraFilters = () => {
 };
 
 const resetAccessoryFilters = () => {
-  accessoryFilters.value = { status: undefined };
+  accessoryFilters.value = { name: '', status: undefined };
   pagination.value.current = 1;
   pagination.value.pageSize = 10;
   fetchAssets();
@@ -614,7 +656,7 @@ const firstImageUrl = (asset: any): string => {
 onMounted(async () => {
   window.addEventListener('resize', handleResize);
   await fetchDicts();
-  await Promise.all([fetchAssets(), fetchBrandModelStats()]);
+  await Promise.all([fetchAssets(), fetchBrandModelStats(), fetchAccessorySummary()]);
 });
 
 onUnmounted(() => {
@@ -812,7 +854,7 @@ const handleSubmitAsset = async () => {
     assetModalVisible.value = false;
     originalImageUrls.value = [...imageUrls];
     fileList.value = [];
-    await Promise.all([fetchAssets(), fetchBrandModelStats()]);
+    await Promise.all([fetchAssets(), fetchBrandModelStats(), fetchAccessorySummary()]);
   } catch {
     // 拦截器已提示
   } finally {
@@ -863,7 +905,7 @@ const confirmDeleteAsset = (record: any) => {
         await request.delete(`/asset/${record.id}`);
         await Promise.all(urls.map(silentDeleteUpload));
         message.success('资产已删除');
-        await Promise.all([fetchAssets(), fetchBrandModelStats()]);
+        await Promise.all([fetchAssets(), fetchBrandModelStats(), fetchAccessorySummary()]);
       } catch {
         // 拦截器已提示
       }
@@ -933,6 +975,10 @@ const nextMonth = () => {
   display: block;
   height: 3px;
   background: linear-gradient(90deg, #1890ff, #36cfc9);
+}
+
+.stats-card-accessory::before {
+  background: linear-gradient(90deg, #722ed1, #eb2f96);
 }
 
 .stats-card-header {

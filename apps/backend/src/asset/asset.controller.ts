@@ -99,6 +99,7 @@ export class AssetController {
     @Query('status') status?: string,
     @Query('type') type?: string,
     @Query('sinCode') sinCode?: string,
+    @Query('name') name?: string,
     @Query('page') pageQ?: string,
     @Query('pageSize') pageSizeQ?: string,
   ) {
@@ -115,6 +116,9 @@ export class AssetController {
     }
     if (sinCode?.trim()) {
       where.sinCode = { contains: sinCode.trim() };
+    }
+    if (name?.trim()) {
+      where.name = { contains: name.trim() };
     }
     const page = toPositiveInt(pageQ);
     const pageSize = toPositiveInt(pageSizeQ);
@@ -214,6 +218,19 @@ export class AssetController {
       count: s._count.id,
       totalPrice: s._sum.price || 0,
     }));
+  }
+
+  @Get('stats/accessory-summary')
+  async statsAccessorySummary() {
+    const result = await this.prisma.asset.aggregate({
+      where: { type: 'Accessory' },
+      _count: { id: true },
+      _sum: { price: true },
+    });
+    return {
+      count: result._count.id,
+      totalPrice: result._sum.price || 0,
+    };
   }
 
   @Get(':id/occupancy')
