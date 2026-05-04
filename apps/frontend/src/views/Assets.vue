@@ -5,6 +5,31 @@
         <a-button type="primary" @click="openAddAssetModal">新增资产</a-button>
       </template>
 
+      <!-- 品牌型号统计卡片 -->
+      <div v-if="brandModelStats.length" class="stats-card-wrapper">
+        <div
+          v-for="stat in brandModelStats"
+          :key="stat.brandName + '-' + stat.modelName"
+          class="stats-card"
+        >
+          <div class="stats-card-header">
+            <span class="stats-brand">{{ stat.brandName }}</span>
+            <span class="stats-model">{{ stat.modelName }}</span>
+          </div>
+          <div class="stats-card-body">
+            <div class="stats-item">
+              <div class="stats-label">资产个数</div>
+              <div class="stats-value">{{ stat.count }}</div>
+            </div>
+            <div class="stats-divider" />
+            <div class="stats-item">
+              <div class="stats-label">金额总计</div>
+              <div class="stats-value stats-price">¥{{ stat.totalPrice.toLocaleString() }}</div>
+            </div>
+          </div>
+        </div>
+      </div>
+
       <a-tabs v-model:activeKey="activeTab" @change="onTabChange">
         <a-tab-pane key="Camera" tab="相机">
           <!-- 相机筛选区 -->
@@ -415,6 +440,23 @@ const deviceModels = ref<any[]>([]);
 const filteredModels = ref<any[]>([]);
 const loading = ref(false);
 
+interface BrandModelStat {
+  brandName: string;
+  modelName: string;
+  count: number;
+  totalPrice: number;
+}
+const brandModelStats = ref<BrandModelStat[]>([]);
+
+const fetchBrandModelStats = async () => {
+  try {
+    const res = await request.get('/asset/stats/by-brand-model') as BrandModelStat[];
+    brandModelStats.value = res;
+  } catch {
+    brandModelStats.value = [];
+  }
+};
+
 const pagination = ref({
   current: 1,
   pageSize: 10,
@@ -575,7 +617,7 @@ const firstImageUrl = (asset: any): string => {
 onMounted(async () => {
   window.addEventListener('resize', handleResize);
   await fetchDicts();
-  await fetchAssets();
+  await Promise.all([fetchAssets(), fetchBrandModelStats()]);
 });
 
 onUnmounted(() => {
@@ -773,7 +815,7 @@ const handleSubmitAsset = async () => {
     assetModalVisible.value = false;
     originalImageUrls.value = [...imageUrls];
     fileList.value = [];
-    await fetchAssets();
+    await Promise.all([fetchAssets(), fetchBrandModelStats()]);
   } catch {
     // 拦截器已提示
   } finally {
@@ -824,7 +866,7 @@ const confirmDeleteAsset = (record: any) => {
         await request.delete(`/asset/${record.id}`);
         await Promise.all(urls.map(silentDeleteUpload));
         message.success('资产已删除');
-        await fetchAssets();
+        await Promise.all([fetchAssets(), fetchBrandModelStats()]);
       } catch {
         // 拦截器已提示
       }
@@ -866,6 +908,91 @@ const nextMonth = () => {
 </script>
 
 <style scoped>
+.stats-card-wrapper {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 12px;
+  margin-bottom: 20px;
+}
+
+.stats-card {
+  flex: 1 1 200px;
+  max-width: 280px;
+  background: #fff;
+  border-radius: 12px;
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.06);
+  overflow: hidden;
+  transition: transform 0.2s ease, box-shadow 0.2s ease;
+  cursor: default;
+}
+
+.stats-card:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 6px 16px rgba(0, 0, 0, 0.1);
+}
+
+.stats-card::before {
+  content: '';
+  display: block;
+  height: 4px;
+  background: linear-gradient(90deg, #1890ff, #36cfc9);
+}
+
+.stats-card-header {
+  padding: 14px 16px 10px;
+  text-align: center;
+  border-bottom: 1px solid #f0f0f0;
+}
+
+.stats-brand {
+  display: block;
+  font-size: 16px;
+  font-weight: 600;
+  color: #262626;
+  line-height: 1.4;
+}
+
+.stats-model {
+  display: block;
+  font-size: 13px;
+  color: #8c8c8c;
+  margin-top: 2px;
+}
+
+.stats-card-body {
+  display: flex;
+  align-items: center;
+  padding: 12px 16px;
+}
+
+.stats-item {
+  flex: 1;
+  text-align: center;
+}
+
+.stats-label {
+  font-size: 12px;
+  color: #8c8c8c;
+  margin-bottom: 4px;
+}
+
+.stats-value {
+  font-size: 18px;
+  font-weight: 700;
+  color: #262626;
+  line-height: 1.3;
+}
+
+.stats-price {
+  color: #cf1322;
+}
+
+.stats-divider {
+  width: 1px;
+  height: 32px;
+  background: #f0f0f0;
+}
+
 .filter-bar {
   display: flex;
   flex-wrap: wrap;

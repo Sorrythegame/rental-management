@@ -188,6 +188,34 @@ export class AssetController {
     return this.prisma.asset.delete({ where: { id: Number(id) } });
   }
 
+  @Get('stats/by-brand-model')
+  async statsByBrandModel() {
+    const stats = await this.prisma.asset.groupBy({
+      by: ['brandId', 'modelId'],
+      where: { type: 'Camera', brandId: { not: null }, modelId: { not: null } },
+      _count: { id: true },
+      _sum: { price: true },
+    });
+
+    const brandIds = [...new Set(stats.map((s) => s.brandId).filter((id): id is number => id !== null))];
+    const modelIds = [...new Set(stats.map((s) => s.modelId).filter((id): id is number => id !== null))];
+
+    const [brandsData, modelsData] = await Promise.all([
+      this.prisma.brand.findMany({ where: { id: { in: brandIds } } }),
+      this.prisma.deviceModel.findMany({ where: { id: { in: modelIds } } }),
+    ]);
+
+    const brandMap = new Map(brandsData.map((b) => [b.id, b.name]));
+    const modelMap = new Map(modelsData.map((m) => [m.id, m.name]));
+
+    return stats.map((s) => ({
+      brandName: brandMap.get(s.brandId!) || '-',
+      modelName: modelMap.get(s.modelId!) || '-',
+      count: s._count.id,
+      totalPrice: s._sum.price || 0,
+    }));
+  }
+
   @Get(':id/occupancy')
   async occupancy(
     @Param('id') id: string,
